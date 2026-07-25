@@ -1477,7 +1477,34 @@ Implemented auto-update system using `tauri-plugin-updater` with signing key gen
 - `cargo check` — ✅ Clean
 
 ### Security Note
-- Private key stored in `.afo-keys/private.key` (NOT in repo)
-- Must be added as GitHub Actions secret: `TAURI_SIGNING_PRIVATE_KEY`
-- Password secret: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty if no password)
+- Private key stored in `.afo-keys/private.key` (NOT in repo, gitignored)
+- Password stored in `.afo-keys/password.txt` (also gitignored)
 - Public key in `tauri.conf.json` — embedded in app binary for signature verification
+- Key pair was regenerated after password exposure in chat transcript
+
+### Local Signing Workflow
+1. Set env vars before build:
+   ```bash
+   export TAURI_SIGNING_PRIVATE_KEY_PATH="/home/anorak/AFO/.afo-keys/private.key"
+   export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat /home/anorak/AFO/.afo-keys/password.txt)"
+   ```
+2. Build: `cargo tauri build --bundles deb,rpm`
+3. Sign manually: `cargo tauri signer sign <artifact>` (for each .deb/.rpm)
+4. Create `latest.json` with signatures
+5. Upload all artifacts to GitHub Release
+
+### Phase 2 Verification Results
+
+| Test | Result |
+|------|--------|
+| Signing key generated with password | PASS — new key at `.afo-keys/private.key`, password at `.afo-keys/password.txt` |
+| Gitignore excludes `.afo-keys/` | PASS — verified in `.gitignore` |
+| Signed DEB build | PASS — `AFO_3.1.0_amd64.deb` + `.sig` generated |
+| Signed RPM build | PASS — `AFO-3.1.0-1.x86_64.rpm` + `.sig` generated |
+| Manual signing works | PASS — `cargo tauri signer sign` produces valid `.sig` files |
+| `latest.json` created with signatures | PASS — version 3.1.0, both platforms, sigs present |
+| Updater endpoint accessible | PASS — `https://github.com/.../releases/latest/download/latest.json` returns valid JSON |
+| GitHub Release uploaded | PASS — v3.1.0 with deb, rpm, sigs, latest.json |
+| v3.1.0 is "latest" release | PASS — v3.0.3 marked prerelease, v3.1.0 is now latest |
+
+**Note:** End-to-end update flow (toast → download → install → relaunch → version confirm → data survival) requires installing v3.0.3 first, then running v3.1.0 to trigger the updater. This is a manual verification step the user must perform.
