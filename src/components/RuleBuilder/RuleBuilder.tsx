@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Trash2, FolderOpen, Sparkles, Download, Upload, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Trash2, FolderOpen, Sparkles, Upload, Download, AlertTriangle } from "lucide-react";
 import { listRules, saveRules, exportRules, importRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { Card, CardHeader, CardDescription, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
 import Toggle from "../ui/Toggle";
@@ -101,7 +103,6 @@ export default function RuleBuilder() {
   const [dryRunPath, setDryRunPath] = useState("");
   const [dryRunResult, setDryRunResult] = useState("");
   const [useVisualEditor, setUseVisualEditor] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[] | null>(null);
   const [pendingImport, setPendingImport] = useState<Rule[] | null>(null);
   const [conflictApplyAll, setConflictApplyAll] = useState<ConflictAction | null>(null);
@@ -140,23 +141,21 @@ export default function RuleBuilder() {
     if (rules.length === 0) { setError("No rules to export"); return; }
     try {
       const json = await exportRules(rules);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `afo-rules-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const dir = await openDialog({ directory: true });
+      if (dir && typeof dir === "string") {
+        const fileName = `afo-rules-${new Date().toISOString().slice(0, 10)}.json`;
+        const filePath = dir.endsWith("/") ? dir + fileName : dir + "/" + fileName;
+        await writeTextFile(filePath, json);
+      }
     } catch (e) { setError(String(e)); }
   }
 
-  function handleImportClick() { fileInputRef.current?.click(); }
-
-  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleImportClick() {
     try {
-      const text = await file.text();
+      const selected = await openDialog({ multiple: false });
+      if (!selected) return;
+      const filePath = typeof selected === "string" ? selected : selected[0];
+      const text = await readTextFile(filePath);
       const imported = await importRules(text);
       const existingNames = new Set(rules.map((r) => r.name));
       const conflicting = imported.filter((r) => existingNames.has(r.name));
@@ -171,7 +170,6 @@ export default function RuleBuilder() {
         setConflictApplyAll(null);
       }
     } catch (e) { setError(String(e)); }
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function setConflictAction(idx: number, action: ConflictAction) {
@@ -235,9 +233,8 @@ export default function RuleBuilder() {
         <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Rule Builder</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Define conditions and actions to organize files automatically.</p></div>
         <div className="flex gap-2">
-          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
-          <Button variant="secondary" onClick={handleExport} className="gap-2"><Download size={14} /> Export</Button>
-          <Button variant="secondary" onClick={handleImportClick} className="gap-2"><Upload size={14} /> Import</Button>
+          <Button variant="secondary" onClick={handleExport} className="gap-2"><Upload size={14} /> Export</Button>
+          <Button variant="secondary" onClick={handleImportClick} className="gap-2"><Download size={14} /> Import</Button>
           <Button onClick={startCreate} className="gap-2"><Plus size={14} /> Create Rule</Button>
         </div>
       </div>
