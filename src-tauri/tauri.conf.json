@@ -85,10 +85,7 @@
       "endpoints": [
         "https://github.com/Himath-Rajapaksha/AFO/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMyMzRFQTAxNkJFMkVENzEKUldSeDdlSnJBZW8wd3ViazVXWERqaTVwNFVBUmtlazNtMnNiRkFmcTgwMTFaWDluVGE2L1FLenEK",
-      "windows": {
-        "installMode": "both"
-      }
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMyMzRFQTAxNkJFMkVENzEKUldSeDdlSnJBZW8wd3ViazVXWERqaTVwNFVBUmtlazNtMnNiRkFmcTgwMTFaWDluVGE2L1FLenEK"
     }
   }
 }
