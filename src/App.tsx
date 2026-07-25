@@ -14,6 +14,7 @@ import TutorialPanel from "./components/TutorialPanel";
 import CommandPalette from "./components/CommandPalette";
 import ToastContainer, { showToast } from "./components/Toast";
 import DropZone from "./components/DropZone";
+import UpdateProvider from "./components/UpdateProvider";
 import { shouldShowTutorial } from "./components/Tutorial";
 
 const panels = {
@@ -117,6 +118,7 @@ export default function App() {
         <DropZone onFilesDropped={handleFilesDropped} />
         <CommandPalette />
         <ToastContainer />
+        <UpdateProvider />
       </div>
     </ThemeProvider>
   );

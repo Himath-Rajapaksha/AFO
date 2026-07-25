@@ -1404,3 +1404,80 @@ All errors display in the error banner at top of RuleBuilder — never crashes, 
 ### Build Verification
 - `npx tsc --noEmit` — ✅ Clean
 - `cargo test` — ✅ 16 passed, 0 failed
+
+### Round-Trip Test (field-by-field diff)
+- Created test `test_round_trip_export_import_diff` in `commands.rs`
+- **Test rules** (different condition/action types):
+  - Rule 1: "PDF to Documents" — Extension+Size conditions, Move action
+  - Rule 2: "Screenshots to Pictures" — Name+Regex condition, Rename+Copy actions
+- **Test flow**: Export → Re-import → Field-by-field diff → Double round-trip
+- **Result**: PASS — all fields match exactly (id, name, enabled, conditions, actions)
+- Total: 17 tests (10 import + 7 search), all pass
+
+### Test File Locations
+- `src-tauri/src/commands.rs` — 10 import tests (lines 786-870)
+- `src-tauri/src/core/journal.rs` — 7 search tests (lines 443-640)
+
+
+## 2026-07-25 — v3.1.0 Phase 2: Auto-Updates
+
+### Summary
+Implemented auto-update system using `tauri-plugin-updater` with signing key generation, update manifest endpoint, and frontend UI.
+
+### Backend Changes
+- **`Cargo.toml`**: Added `tauri-plugin-updater` and `tauri-plugin-process` dependencies
+- **`lib.rs`**: Registered `tauri_plugin_updater::Builder::new().build()` and `tauri_plugin_process::init()`
+- **`tauri.conf.json`**: Added `plugins.updater` config with endpoint pointing to GitHub Releases `latest.json`
+- **`capabilities/default.json`**: Added `updater:default` and `process:default` permissions
+
+### Signing Key Pair
+- Generated with `cargo tauri signer generate`
+- **Private key**: `/home/anorak/AFO/.afo-keys/private.key` (excluded from git via `.gitignore`)
+- **Public key**: Embedded in `tauri.conf.json` `plugins.updater.pubkey`
+- **IMPORTANT**: Private key must be added as GitHub Actions secret `TAURI_SIGNING_PRIVATE_KEY` for CI/CD signing
+
+### CI/CD Updates (`.github/workflows/release.yml`)
+- All 3 build jobs now pass `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` env vars
+- Tauri Action automatically signs artifacts and generates `latest.json` update manifest
+- Manifest uploaded to GitHub Releases alongside binaries
+
+### Frontend Changes
+- **`UpdateProvider.tsx`** (new component):
+  - Checks for updates on mount + every 60 minutes
+  - Shows toast notification in bottom-right corner when update available
+  - Displays version, date, and release notes
+  - "Install Update" button downloads and installs, then relaunches app
+  - "Skip" button dismisses (persisted to localStorage)
+  - Progress bar during download
+  - Error handling for failed downloads
+- **`App.tsx`**: Added `UpdateProvider` to render tree
+
+### Update Flow
+1. App starts → `UpdateProvider` mounts → `check()` queries GitHub Releases `latest.json`
+2. If update available → toast appears with version + release notes
+3. User clicks "Install Update" → `downloadAndInstall()` with progress events
+4. Download complete → `relaunch()` restarts app with new version
+5. Check runs hourly; dismissed updates stay dismissed until app restart
+
+### Files Modified
+- `src-tauri/Cargo.toml` — added updater + process plugins
+- `src-tauri/Cargo.lock` — updated lockfile
+- `src-tauri/src/lib.rs` — registered updater + process plugins
+- `src-tauri/tauri.conf.json` — added updater endpoint + public key
+- `src-tauri/capabilities/default.json` — added updater + process permissions
+- `.github/workflows/release.yml` — added signing key env vars
+- `.gitignore` — added `.afo-keys/`
+- `package.json` — added @tauri-apps/plugin-updater + plugin-process
+- `src/App.tsx` — added UpdateProvider
+- `src/components/UpdateProvider/UpdateProvider.tsx` — new update UI
+- `src/components/UpdateProvider/index.ts` — re-export
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean
+- `cargo check` — ✅ Clean
+
+### Security Note
+- Private key stored in `.afo-keys/private.key` (NOT in repo)
+- Must be added as GitHub Actions secret: `TAURI_SIGNING_PRIVATE_KEY`
+- Password secret: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty if no password)
+- Public key in `tauri.conf.json` — embedded in app binary for signature verification

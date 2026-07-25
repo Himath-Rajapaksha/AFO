@@ -79,5 +79,16 @@
       },
       "minimumSystemVersion": "10.15"
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Himath-Rajapaksha/AFO/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEREMkY5OTE1MDgxQTM4QQpSV1NLbzRGUWtmWFNEU2o4YS9SVVNPbTlMbEptdnlFUXR3ZDNMRmRXcVhQSFhUSlB4di9HNEZYMgo=",
+      "windows": {
+        "installMode": "both"
+      }
+    }
   }
 }
