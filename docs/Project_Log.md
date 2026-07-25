@@ -1508,3 +1508,62 @@ Implemented auto-update system using `tauri-plugin-updater` with signing key gen
 | v3.1.0 is "latest" release | PASS — v3.0.3 marked prerelease, v3.1.0 is now latest |
 
 **Note:** End-to-end update flow (toast → download → install → relaunch → version confirm → data survival) requires installing v3.0.3 first, then running v3.1.0 to trigger the updater. This is a manual verification step the user must perform.
+
+
+## 2026-07-25 — Native macOS-Inspired Design System Integration
+
+### Summary
+Integrated the macOS System Settings-inspired native design system from the `afo-dev (5)` reference bundle. New design tokens, updated UI primitives, backward-compatible CSS variable aliases, and Tailwind token merge — all panels continue working with existing functionality.
+
+### Files Copied from afo-dev Reference Bundle
+- `src/styles/theme.css` — new design tokens (`--color-bg`, `--color-text`, etc.) replacing old `--bg-*`/`--text-*` naming
+- `src/lib/ThemeProvider.tsx` — React context with localStorage persistence, `useTheme()` hook
+- `src/components/ui/Toggle.tsx` — framer-motion animated switch
+- `src/components/ui/SegmentedControl.tsx` — macOS-style segmented control
+- `src/components/ui/Card.tsx` — Card / CardHeader / CardRow / CardDescription / CardFooter
+- `src/components/ui/Button.tsx` — primary / secondary / ghost / danger variants
+- `src/assets/logo.png` — updated funnel icon
+
+### theme.css Changes
+- New canonical tokens: `--color-bg`, `--color-sidebar`, `--color-card`, `--color-text`, `--color-accent`, etc.
+- Backward-compatible aliases: `--bg-app` → `var(--color-bg)`, `--text-primary` → `var(--color-text)`, etc.
+- All existing panel inline `style={}` references continue working via aliases
+- Storage category colors: `--cat-images`, `--cat-documents`, `--cat-audio`, `--cat-video`, `--cat-archives`, `--cat-code`, `--cat-other` (light + dark)
+- Toggle tokens: `--toggle-on-bg`, `--toggle-off-bg`, `--toggle-on-knob`
+- Sidebar icon tile foreground: `--icon-organize-fg`, `--icon-rules-fg`, etc.
+- Hover button gradient: `--circle-start`, `--circle-end`
+
+### tailwind.config.js Merge
+- Added new token names (`bg`, `sidebar`, `card`, `border`, `text`, `accent`, `icon.*`)
+- Kept existing aliases for backward compatibility (`text-primary`, `accent-soft`, `afo.*`)
+- `darkMode: 'class'` preserved
+- `fontFamily.sans` updated to include `-apple-system`, `BlinkMacSystemFont`, `Inter`
+
+### UI Primitive Compatibility Fixes
+- **Button**: Added `secondary` variant (same as `ghost` with border) + `size` prop
+- **Card**: Added `CardDescription` component + `label`/`description`/`control`/`rightValue` props on `CardRow`
+- **Toggle**: Added `size` prop (ignored, for compatibility)
+- **SegmentedControl**: Accepts both `string[]` and `{value, label}[]` formats + `layoutId`/`size` props
+- All existing panel imports (`import Button from "../ui/Button"`, `import { Card, CardRow } from "../ui/Card"`) continue working
+
+### App.tsx
+- Replaced inline `style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}` with Tailwind classes `bg-bg text-text`
+
+### Storage Breakdown Feature (pre-existing, verified)
+- `scan_storage_breakdown` command already in `commands.rs:668-779`
+- Reuses `CategoryConfig.categorize()` from `organizer.rs` — no duplicate classifier
+- Runs in `tokio::task::spawn_blocking` for non-blocking UI
+- Permission-denied directories gracefully skipped
+- Disk space detection via `sysinfo::Disks`
+- `StoragePanel.tsx` frontend complete with segmented bar + legend
+- Sidebar "Storage" entry with `HardDrive` icon already present
+- Command registered in `lib.rs:139`
+
+### Commit
+- `530881b` — `feat: integrate native macOS-inspired design system`
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean (0 errors)
+- `cargo check` — ✅ Clean
+- `npm run build` — ✅ Built successfully
+- CSS variable audit: all `var(--*)` references in panels are defined in theme.css
