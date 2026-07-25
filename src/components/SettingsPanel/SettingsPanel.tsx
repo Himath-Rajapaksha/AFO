@@ -89,7 +89,7 @@ function GeneralSection() {
         <div className="flex items-center gap-2 mb-3">
           <Button variant="secondary" onClick={handlePickDir} className="text-xs">Browse</Button>
           <input type="text" value={newDir} onChange={(e) => setNewDir(e.target.value)} placeholder="/path/to/directory" onKeyDown={(e) => e.key === "Enter" && handleAddDir()}
-            className="flex-1 rounded-lg px-3 py-2 text-sm outline-none" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            className="flex-1 rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>
         </div>
         {loadingDirs ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Loading...</p> : watchedDirs.length === 0 ? (
@@ -147,17 +147,17 @@ function SchedulesCard() {
       {showCreate && (
         <div className="mb-3 rounded-lg p-3 space-y-2" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
           <div className="grid grid-cols-2 gap-2">
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" className="rounded-lg px-3 py-1.5 text-sm outline-none" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
-            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" className="rounded-lg px-3 py-1.5 text-sm outline-none" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} className="rounded-lg px-3 py-1.5 text-sm outline-none" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
+            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
               <option value="organize_extension">Organize by Extension</option>
               <option value="organize_date">Organize by Date</option>
               <option value="apply_rules">Apply Rules</option>
               <option value="scan_duplicates">Scan Duplicates</option>
             </select>
-            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" className="rounded-lg px-3 py-1.5 text-sm outline-none" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="flex gap-2">
             <Button onClick={handleCreate} disabled={!newName.trim() || !newCron.trim() || !newPath.trim()} className="text-xs">Save</Button>

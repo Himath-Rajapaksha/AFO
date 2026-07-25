@@ -274,7 +274,7 @@ export default function StoragePanel() {
             onChange={(e) => setNewDir(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddDir()}
             placeholder="/path/to/directory"
-            className="flex-1 rounded-lg px-3 py-1.5 text-sm outline-none"
+            className="flex-1 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
           />
           <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>

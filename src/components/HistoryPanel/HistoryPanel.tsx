@@ -140,7 +140,7 @@ export default function HistoryPanel() {
                 placeholder="Search by filename..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg pl-9 pr-8 py-1.5 text-sm outline-none"
+                className="w-full rounded-lg pl-9 pr-8 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
               />
               {searchQuery && (
@@ -159,7 +159,7 @@ export default function HistoryPanel() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             >
               <option value="all">All operations</option>
@@ -173,7 +173,7 @@ export default function HistoryPanel() {
               value={filterDateFrom}
               onChange={(e) => setFilterDateFrom(e.target.value)}
               placeholder="From"
-              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
             <input
@@ -181,7 +181,7 @@ export default function HistoryPanel() {
               value={filterDateTo}
               onChange={(e) => setFilterDateTo(e.target.value)}
               placeholder="To"
-              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
           </div>

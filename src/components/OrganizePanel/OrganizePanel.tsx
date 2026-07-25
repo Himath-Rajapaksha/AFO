@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { FolderOpen, Play, Search } from "lucide-react";
+import Toggle from "../ui/Toggle";
 import {
   scanDirectory,
   organizeByExtension,
@@ -140,7 +141,7 @@ export default function OrganizePanel() {
           <div className="mt-3 space-y-2">
             <CardRow label="Rename Pattern" description='Use {name}, {ext}, {counter}' control={
               <input type="text" value={renamePattern} onChange={(e) => setRenamePattern(e.target.value)} placeholder="{name}_{counter}.{ext}"
-                className="w-48 rounded-lg px-3 py-1.5 text-sm outline-none" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+                className="w-48 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
             } />
           </div>
         )}
@@ -149,9 +150,7 @@ export default function OrganizePanel() {
       {/* Options */}
       <Card>
         <CardRow label="Preview only (dry run)" control={
-          <button onClick={() => setDryRun(!dryRun)} className="relative rounded-full transition-colors" style={{ width: 44, height: 26, backgroundColor: dryRun ? "var(--toggle-on-bg)" : "var(--toggle-off-bg)" }}>
-            <div className="absolute top-0.5 h-5.5 w-5.5 rounded-full" style={{ width: 22, height: 22, backgroundColor: "var(--toggle-on-knob)", transform: `translateX(${dryRun ? 20 : 2}px)`, boxShadow: "var(--shadow-sm)" }} />
-          </button>
+          <Toggle checked={dryRun} onChange={setDryRun} label="Preview only (dry run)" />
         } />
       </Card>
 
@@ -214,7 +213,12 @@ export default function OrganizePanel() {
                 <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Size</th>
               </tr></thead>
               <tbody>{displayedFiles.map((f, i) => (
-                <tr key={i} onClick={() => handleFileClick(f.path)} className="cursor-pointer transition-colors" style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: selectedFile === f.path ? "var(--accent-soft)" : "transparent" }}>
+                <tr key={i} role="button" tabIndex={0}
+                  onClick={() => handleFileClick(f.path)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleFileClick(f.path); } }}
+                  aria-label={`View metadata for ${f.name}`}
+                  className="cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: selectedFile === f.path ? "var(--accent-soft)" : "transparent" }}>
                   <td className="max-w-[240px] truncate px-3 py-1.5" style={{ color: "var(--text-primary)" }}>{f.name}</td>
                   <td className="px-3 py-1.5" style={{ color: "var(--text-secondary)" }}>{f.extension}</td>
                   <td className="px-3 py-1.5" style={{ color: "var(--text-secondary)" }}>{formatBytes(f.size)}</td>

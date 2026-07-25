@@ -7,6 +7,7 @@ import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { Card, CardHeader, CardDescription, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
 import Toggle from "../ui/Toggle";
+import { inputCls } from "../ui/input";
 import RuleFlowEditor from "./RuleFlowEditor";
 
 type ConflictAction = "replace" | "keep_both" | "skip";
@@ -90,7 +91,6 @@ const PRESET_RULES: PresetRule[] = [
   },
 ];
 
-const inputCls = "rounded-lg px-3 py-1.5 text-sm outline-none";
 const inputStyle = { backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" };
 
 export default function RuleBuilder() {

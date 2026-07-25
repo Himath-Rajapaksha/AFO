@@ -50,7 +50,7 @@ function ConditionNode({ data }: { data: ConditionNodeData }) {
         <select
           value={data.field}
           onChange={(e) => data.onUpdate(e.target.value, data.operator, data.value)}
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           <option value="Extension">Extension</option>
           <option value="Name">Name</option>
@@ -61,7 +61,7 @@ function ConditionNode({ data }: { data: ConditionNodeData }) {
         <select
           value={data.operator}
           onChange={(e) => data.onUpdate(data.field, e.target.value, data.value)}
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           <option value="Equals">Equals</option>
           <option value="Contains">Contains</option>
@@ -76,7 +76,7 @@ function ConditionNode({ data }: { data: ConditionNodeData }) {
           value={data.value}
           onChange={(e) => data.onUpdate(data.field, data.operator, e.target.value)}
           placeholder="value"
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
       <Handle type="source" position={Position.Bottom} className="!bg-afo-sky" />
@@ -99,7 +99,7 @@ function ActionNode({ data }: { data: ActionNodeData }) {
         <select
           value={data.actionType}
           onChange={(e) => data.onUpdate(e.target.value, data.value)}
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           <option value="Move">Move</option>
           <option value="Copy">Copy</option>
@@ -110,7 +110,7 @@ function ActionNode({ data }: { data: ActionNodeData }) {
           value={data.value}
           onChange={(e) => data.onUpdate(data.actionType, e.target.value)}
           placeholder={data.actionType === "Rename" ? "{name}_sorted.{ext}" : "/destination/path"}
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
     </div>

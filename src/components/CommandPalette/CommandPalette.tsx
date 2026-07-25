@@ -200,6 +200,17 @@ export default function CommandPalette() {
 
   // ── Keyboard nav ─────────────────────────────────────
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus search input on open
+  useEffect(() => {
+    if (open) {
+      // Small delay to let the portal render
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -212,6 +223,27 @@ export default function CommandPalette() {
       filtered[activeIndex]?.action();
     } else if (e.key === "Escape") {
       setOpen(false);
+    } else if (e.key === "Tab") {
+      // Focus trap: cycle through focusable elements within the container
+      const container = containerRef.current;
+      if (!container) return;
+      const focusables = container.querySelectorAll<HTMLElement>(
+        'input, button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
   }
 
@@ -241,6 +273,10 @@ export default function CommandPalette() {
 
   return createPortal(
     <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
       onKeyDown={onKeyDown}
     >
@@ -286,7 +322,7 @@ export default function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type a command…"
-            className="flex-1 bg-transparent text-sm outline-none"
+            className="flex-1 bg-transparent text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ color: textPri }}
           />
           <kbd

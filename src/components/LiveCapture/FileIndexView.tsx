@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
 import { type IndexedFile, searchFileIndex } from "../../lib/tauri-bridge";
+import { inputCls } from "../ui/input";
 
-const inputCls = "rounded-lg px-3 py-1.5 text-sm outline-none";
 const inputStyle = { backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" };
 
 function formatBytes(bytes: number): string {
