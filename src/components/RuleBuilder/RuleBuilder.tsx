@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, FolderOpen, Sparkles } from "lucide-react";
-import { listRules, saveRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, Trash2, FolderOpen, Sparkles, Download, Upload } from "lucide-react";
+import { listRules, saveRules, exportRules, importRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
 import { Card, CardHeader, CardDescription, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
 import Toggle from "../ui/Toggle";
@@ -94,6 +94,7 @@ export default function RuleBuilder() {
   const [dryRunPath, setDryRunPath] = useState("");
   const [dryRunResult, setDryRunResult] = useState("");
   const [useVisualEditor, setUseVisualEditor] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => { try { setRules(await listRules()); } catch (e) { setError(String(e)); } }, []);
   useEffect(() => { refresh().finally(() => setLoading(false)); }, [refresh]);
@@ -125,6 +126,47 @@ export default function RuleBuilder() {
     try { const res = await applyRules(dryRunPath, true); setDryRunResult(`${res.moved} files affected (${res.skipped} skipped, ${res.errors.length} errors)`); } catch (e) { setDryRunResult(`Error: ${e}`); }
   }
 
+  async function handleExport() {
+    if (rules.length === 0) { setError("No rules to export"); return; }
+    try {
+      const json = await exportRules(rules);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `afo-rules-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { setError(String(e)); }
+  }
+
+  function handleImportClick() { fileInputRef.current?.click(); }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = await importRules(text);
+      const existingNames = new Set(rules.map((r) => r.name));
+      const conflicts = imported.filter((r) => existingNames.has(r.name));
+      let merged: Rule[];
+      if (conflicts.length > 0) {
+        const withoutConflicts = imported.filter((r) => !existingNames.has(r.name));
+        const updatedExisting = rules.map((r) => {
+          const replacement = conflicts.find((c) => c.name === r.name);
+          return replacement ? { ...replacement, id: r.id } : r;
+        });
+        merged = [...updatedExisting, ...withoutConflicts];
+      } else {
+        merged = [...rules, ...imported];
+      }
+      await saveRules(merged);
+      setRules(merged);
+    } catch (e) { setError(String(e)); }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   function addPreset(preset: PresetRule) {
     const newRule: Rule = { id: makeId(), name: preset.name, enabled: true, conditions: preset.conditions, actions: preset.actions };
     const updated = [...rules, newRule];
@@ -140,7 +182,12 @@ export default function RuleBuilder() {
       <div className="flex items-start justify-between">
         <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Rule Builder</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Define conditions and actions to organize files automatically.</p></div>
-        <Button onClick={startCreate} className="gap-2"><Plus size={14} /> Create Rule</Button>
+        <div className="flex gap-2">
+          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
+          <Button variant="secondary" onClick={handleExport} className="gap-2"><Download size={14} /> Export</Button>
+          <Button variant="secondary" onClick={handleImportClick} className="gap-2"><Upload size={14} /> Import</Button>
+          <Button onClick={startCreate} className="gap-2"><Plus size={14} /> Create Rule</Button>
+        </div>
       </div>
 
       {error && <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "var(--accent-soft)", color: "var(--danger)" }}>{error}</div>}

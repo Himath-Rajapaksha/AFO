@@ -322,6 +322,29 @@ pub async fn save_rules(rules: Vec<rule_engine::Rule>) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn export_rules(rules: Vec<rule_engine::Rule>) -> Result<String, String> {
+    serde_json::to_string_pretty(&rules).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn import_rules(json: String) -> Result<Vec<rule_engine::Rule>, String> {
+    let rules: Vec<rule_engine::Rule> =
+        serde_json::from_str(&json).map_err(|e| format!("Invalid rules JSON: {e}"))?;
+    for rule in &rules {
+        if rule.name.is_empty() {
+            return Err("Rule name cannot be empty".into());
+        }
+        if rule.conditions.is_empty() {
+            return Err(format!("Rule '{}' has no conditions", rule.name));
+        }
+        if rule.actions.is_empty() {
+            return Err(format!("Rule '{}' has no actions", rule.name));
+        }
+    }
+    Ok(rules)
+}
+
+#[tauri::command]
 pub async fn apply_rules(path: String, dry_run: bool) -> Result<organizer::OrganizeResult, String> {
     rule_engine::apply_rules(&path, dry_run).map_err(|e| e.to_string())
 }
@@ -365,6 +388,15 @@ pub async fn get_history(
     offset: Option<i64>,
 ) -> Result<Vec<journal::JournalEntry>, String> {
     journal::get_history(limit.unwrap_or(50), offset.unwrap_or(0))
+}
+
+#[tauri::command]
+pub async fn search_history(
+    filter: journal::HistoryFilter,
+    limit: Option<i64>,
+    offset: Option<i64>,
+) -> Result<Vec<journal::JournalEntry>, String> {
+    journal::search_history(&filter, limit.unwrap_or(50), offset.unwrap_or(0))
 }
 
 #[tauri::command]

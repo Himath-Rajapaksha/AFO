@@ -66,6 +66,14 @@ export async function saveRules(rules: Rule[]): Promise<void> {
   return invoke("save_rules", { rules });
 }
 
+export async function exportRules(rules: Rule[]): Promise<string> {
+  return invoke<string>("export_rules", { rules });
+}
+
+export async function importRules(json: string): Promise<Rule[]> {
+  return invoke<Rule[]>("import_rules", { json });
+}
+
 export async function applyRules(path: string, dryRun: boolean): Promise<OrganizeResult> {
   return invoke<OrganizeResult>("apply_rules", { path, dryRun });
 }
@@ -118,6 +126,21 @@ export interface JournalEntry {
 
 export async function getHistory(limit?: number, offset?: number): Promise<JournalEntry[]> {
   return invoke<JournalEntry[]>("get_history", { limit, offset });
+}
+
+export interface HistoryFilter {
+  query?: string;
+  operation_type?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
+export async function searchHistory(
+  filter: HistoryFilter,
+  limit?: number,
+  offset?: number,
+): Promise<JournalEntry[]> {
+  return invoke<JournalEntry[]>("search_history", { filter, limit, offset });
 }
 
 export async function undoLast(): Promise<JournalEntry | null> {

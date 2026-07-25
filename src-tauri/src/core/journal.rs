@@ -143,6 +143,92 @@ pub fn get_history(limit: i64, offset: i64) -> Result<Vec<JournalEntry>, String>
     })
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct HistoryFilter {
+    pub query: Option<String>,
+    pub operation_type: Option<String>,
+    pub date_from: Option<String>,
+    pub date_to: Option<String>,
+}
+
+pub fn search_history(
+    filter: &HistoryFilter,
+    limit: i64,
+    offset: i64,
+) -> Result<Vec<JournalEntry>, String> {
+    with_connection(|db| {
+        let mut conditions: Vec<String> = Vec::new();
+        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+
+        if let Some(ref op) = filter.operation_type {
+            if !op.is_empty() && op != "all" {
+                conditions.push("operation_type = ?".into());
+                param_values.push(Box::new(op.clone()));
+            }
+        }
+
+        if let Some(ref q) = filter.query {
+            if !q.is_empty() {
+                let pattern = format!("%{q}%");
+                conditions.push("(source_path LIKE ? OR dest_path LIKE ?)".into());
+                param_values.push(Box::new(pattern.clone()));
+                param_values.push(Box::new(pattern));
+            }
+        }
+
+        if let Some(ref from) = filter.date_from {
+            if !from.is_empty() {
+                conditions.push("timestamp >= ?".into());
+                param_values.push(Box::new(from.clone()));
+            }
+        }
+
+        if let Some(ref to) = filter.date_to {
+            if !to.is_empty() {
+                conditions.push("timestamp <= ?".into());
+                param_values.push(Box::new(to.clone()));
+            }
+        }
+
+        let where_clause = if conditions.is_empty() {
+            String::new()
+        } else {
+            format!("WHERE {}", conditions.join(" AND "))
+        };
+
+        let sql = format!(
+            "SELECT id, operation_type, source_path, dest_path, timestamp, reverted
+             FROM operations {where_clause}
+             ORDER BY timestamp DESC
+             LIMIT ?1 OFFSET ?2"
+        );
+
+        let mut stmt = db.prepare(&sql).map_err(|e| e.to_string())?;
+
+        let mut params: Vec<&dyn rusqlite::types::ToSql> = param_values
+            .iter()
+            .map(|p| p.as_ref() as &dyn rusqlite::types::ToSql)
+            .collect();
+        params.push(&limit);
+        params.push(&offset);
+
+        let rows = stmt
+            .query_map(params.as_slice(), |row| {
+                Ok(JournalEntry {
+                    id: row.get(0)?,
+                    operation_type: row.get(1)?,
+                    source_path: row.get(2)?,
+                    dest_path: row.get(3)?,
+                    timestamp: row.get(4)?,
+                    reverted: row.get::<_, i32>(5)? != 0,
+                })
+            })
+            .map_err(|e| e.to_string())?;
+        let entries: Vec<JournalEntry> = rows.filter_map(|r| r.ok()).collect();
+        Ok(entries)
+    })
+}
+
 /// Reverse a file operation based on its type
 fn reverse_operation(entry: &JournalEntry) -> Result<(), Box<dyn std::error::Error>> {
     let src = Path::new(&entry.source_path);

@@ -1284,3 +1284,64 @@ Production release with new app icon, version bump to 3.0.0, all features from v
 ### Pending
 - Desktop/launcher icon still shows old orange — needs icon cache refresh or rebuild
 - `.icns` and `.ico` files not yet regenerated from new PNG
+
+
+## 2026-07-25 — v3.1.0 Phase 1: Rule Import/Export + History Search & Filtering
+
+### Summary
+Phase 1 of v3.1.0 planning pass. Implemented Rule Import/Export and History Search & Filtering.
+
+### Branch
+- `ft/v3.1.0-planning-pass` (from master)
+
+### Rule Import/Export (Backend)
+- **`commands.rs`**: Added `export_rules` command — serializes rule array to pretty JSON string
+- **`commands.rs`**: Added `import_rules` command — validates JSON, checks rule names are non-empty, conditions/actions are present
+- Validation reuses the same schema as `save_rules` (no second validator)
+
+### Rule Import/Export (Frontend)
+- **`tauri-bridge.ts`**: Added `exportRules(rules)` and `importRules(json)` functions
+- **`RuleBuilder.tsx`**: Added Export button — downloads rules as `afo-rules-YYYY-MM-DD.json`
+- **`RuleBuilder.tsx`**: Added Import button — opens file picker, validates JSON, merges with conflict handling:
+  - Rules with same name: existing rule replaced with imported version (keeps original ID)
+  - Rules with unique names: appended to existing set
+  - Import uses hidden `<input type="file">` with `accept=".json"`
+
+### History Search & Filtering (Backend)
+- **`journal.rs`**: Added `HistoryFilter` struct with `query`, `operation_type`, `date_from`, `date_to`
+- **`journal.rs`**: Added `search_history()` — dynamic SQL WHERE clause builder:
+  - `operation_type` filter: exact match on operation type
+  - `query` filter: LIKE match on both `source_path` and `dest_path` (filename substring search)
+  - `date_from`/`date_to` filter: timestamp range comparison
+  - All filters optional and composable (AND logic)
+  - Uses parameterized queries (no SQL injection)
+- **`commands.rs`**: Added `search_history` command
+- **`lib.rs`**: Registered `export_rules`, `import_rules`, `search_history` commands
+
+### History Search & Filtering (Frontend)
+- **`tauri-bridge.ts`**: Added `HistoryFilter` interface and `searchHistory()` function
+- **`HistoryPanel.tsx`**: Added Search & Filter card with:
+  - Text input for filename substring search (with clear button)
+  - Dropdown for operation type filter (All/Move/Copy/Rename/Delete)
+  - Date range pickers (From/To)
+  - Clear filters button when any filter is active
+  - Server-side filtering: uses `searchHistory()` when filters active, `getHistory()` otherwise
+  - Filter state resets offset to 0 on change
+
+### Files Modified
+- `src-tauri/src/commands.rs` — added export_rules, import_rules, search_history commands
+- `src-tauri/src/core/journal.rs` — added HistoryFilter struct, search_history function
+- `src-tauri/src/lib.rs` — registered 3 new commands
+- `src/lib/tauri-bridge.ts` — added exportRules, importRules, searchHistory, HistoryFilter
+- `src/components/RuleBuilder/RuleBuilder.tsx` — Export/Import buttons with merge logic
+- `src/components/HistoryPanel/HistoryPanel.tsx` — Search & Filter UI with server-side queries
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean
+- `cargo check` — ✅ Clean
+
+### Verification Plan
+- Export rules → delete from app → re-import → confirm same conditions/actions
+- Search for filename substring → confirm finds entries across full history (not just loaded page)
+- Filter by operation type → confirm only matching entries shown
+- Filter by date range → confirm entries outside range excluded

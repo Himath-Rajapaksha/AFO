@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { RotateCcw, RotateCw, Undo2, Zap } from "lucide-react";
+import { RotateCcw, RotateCw, Undo2, Zap, Search, X } from "lucide-react";
 import { listen } from "@tauri-apps/api/event";
-import { getHistory, undoLast, undoOperation, redoLast, type JournalEntry } from "../../lib/tauri-bridge";
+import { getHistory, searchHistory, undoLast, undoOperation, redoLast, type JournalEntry, type HistoryFilter } from "../../lib/tauri-bridge";
 import { Card, CardHeader, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
 import Toggle from "../ui/Toggle";
@@ -42,6 +42,10 @@ export default function HistoryPanel() {
   });
   const [keepFullHistory] = useState(true);
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   // Persist the setting to localStorage
   useEffect(() => {
@@ -62,12 +66,22 @@ export default function HistoryPanel() {
     return () => { unlisten.then((fn) => fn()); };
   }, []);
 
+  const hasActiveFilter = searchQuery || filterType !== "all" || filterDateFrom || filterDateTo;
+
   const refresh = useCallback(async (off = 0, append = false) => {
     const MAX_RETRIES = 5;
     const RETRY_DELAY_MS = 200;
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        const batch = await getHistory(PAGE_SIZE, off);
+        const filter: HistoryFilter = {};
+        if (searchQuery) filter.query = searchQuery;
+        if (filterType !== "all") filter.operation_type = filterType;
+        if (filterDateFrom) filter.date_from = filterDateFrom;
+        if (filterDateTo) filter.date_to = filterDateTo + "T23:59:59";
+
+        const batch = hasActiveFilter
+          ? await searchHistory(filter, PAGE_SIZE, off)
+          : await getHistory(PAGE_SIZE, off);
         setEntries((p) => (append ? [...p, ...batch] : batch));
         setHasMore(batch.length === PAGE_SIZE);
         setError("");
@@ -84,9 +98,16 @@ export default function HistoryPanel() {
       }
     }
     setLoading(false);
-  }, []);
+  }, [searchQuery, filterType, filterDateFrom, filterDateTo, hasActiveFilter]);
 
-  useEffect(() => { refresh(0); }, [refresh]);
+  useEffect(() => { setOffset(0); refresh(0); }, [refresh]);
+
+  function clearFilters() {
+    setSearchQuery("");
+    setFilterType("all");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+  }
 
   async function handleLoadMore() { const next = offset + PAGE_SIZE; setOffset(next); await refresh(next, true); }
   async function handleUndoLast() { setActing(true); try { await undoLast(); setOffset(0); await refresh(0); } catch (e) { setError(String(e)); } finally { setActing(false); } }
@@ -105,6 +126,66 @@ export default function HistoryPanel() {
         <CardHeader>History Settings</CardHeader>
         <CardRow label="Enable Undo/Redo" description="Show undo/redo controls (journal always records)" control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} />} />
         <CardRow label="Keep Full History" description="Store all operations (always on)" control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled />} />
+      </Card>
+
+      {/* Search & Filters */}
+      <Card>
+        <CardHeader>Search & Filter</CardHeader>
+        <div className="flex flex-col gap-3 mt-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-tertiary)" }} />
+              <input
+                type="text"
+                placeholder="Search by filename..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg pl-9 pr-8 py-1.5 text-sm outline-none"
+                style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: "var(--text-tertiary)" }}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            {hasActiveFilter && (
+              <Button variant="secondary" onClick={clearFilters} className="text-xs px-3 py-1.5 gap-1">
+                <X size={12} /> Clear
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+            >
+              <option value="all">All operations</option>
+              <option value="move">Move</option>
+              <option value="copy">Copy</option>
+              <option value="rename">Rename</option>
+              <option value="delete">Delete</option>
+            </select>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+              placeholder="From"
+              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+            />
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+              placeholder="To"
+              className="rounded-lg px-3 py-1.5 text-sm outline-none"
+              style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+            />
+          </div>
+        </div>
       </Card>
 
       {/* Actions - only shown when undo/redo is enabled */}
