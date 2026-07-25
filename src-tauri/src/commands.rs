@@ -847,4 +847,90 @@ mod import_tests {
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 1);
     }
+
+    #[test]
+    fn test_round_trip_export_import_diff() {
+        // Create 2 rules with DIFFERENT condition and action types
+        let originals: Vec<rule_engine::Rule> = vec![
+            rule_engine::Rule {
+                id: "rule-pdf-docs".into(),
+                name: "PDF to Documents".into(),
+                enabled: true,
+                conditions: vec![
+                    rule_engine::Condition {
+                        field: rule_engine::ConditionField::Extension,
+                        operator: rule_engine::Operator::Equals,
+                        value: ".pdf".into(),
+                    },
+                    rule_engine::Condition {
+                        field: rule_engine::ConditionField::Size,
+                        operator: rule_engine::Operator::GreaterThan,
+                        value: "1048576".into(),
+                    },
+                ],
+                actions: vec![
+                    rule_engine::Action::Move { destination: "~/Documents".into() },
+                ],
+            },
+            rule_engine::Rule {
+                id: "rule-screenshots".into(),
+                name: "Screenshots to Pictures".into(),
+                enabled: false,
+                conditions: vec![
+                    rule_engine::Condition {
+                        field: rule_engine::ConditionField::Name,
+                        operator: rule_engine::Operator::Regex,
+                        value: "(?i)screenshot|screen.?shot".into(),
+                    },
+                ],
+                actions: vec![
+                    rule_engine::Action::Rename { pattern: "{name}_{counter}{ext}".into() },
+                    rule_engine::Action::Copy { destination: "~/Pictures/Screenshots".into() },
+                ],
+            },
+        ];
+
+        // Export
+        let json = tokio_test::block_on(export_rules(originals.clone())).unwrap();
+        assert!(json.contains("PDF to Documents"));
+        assert!(json.contains("Screenshots to Pictures"));
+
+        // Re-import
+        let reimported = tokio_test::block_on(import_rules(json)).unwrap();
+        assert_eq!(reimported.len(), 2);
+
+        // Sort by name for deterministic comparison
+        let mut orig_sorted = originals.clone();
+        orig_sorted.sort_by(|a, b| a.name.cmp(&b.name));
+        let mut reimp_sorted = reimported;
+        reimp_sorted.sort_by(|a, b| a.name.cmp(&b.name));
+
+        // Field-by-field diff
+        for (orig, reimp) in orig_sorted.iter().zip(reimp_sorted.iter()) {
+            assert_eq!(orig.name, reimp.name, "name mismatch");
+            assert_eq!(orig.id, reimp.id, "id mismatch");
+            assert_eq!(orig.enabled, reimp.enabled, "enabled mismatch");
+            assert_eq!(orig.conditions.len(), reimp.conditions.len(), "conditions count mismatch for '{}'", orig.name);
+
+            for (i, (oc, rc)) in orig.conditions.iter().zip(reimp.conditions.iter()).enumerate() {
+                assert_eq!(format!("{:?}", oc.field), format!("{:?}", rc.field), "condition[{}] field mismatch in '{}'", i, orig.name);
+                assert_eq!(format!("{:?}", oc.operator), format!("{:?}", rc.operator), "condition[{}] operator mismatch in '{}'", i, orig.name);
+                assert_eq!(oc.value, rc.value, "condition[{}] value mismatch in '{}'", i, orig.name);
+            }
+
+            assert_eq!(orig.actions.len(), reimp.actions.len(), "actions count mismatch for '{}'", orig.name);
+
+            for (i, (oa, ra)) in orig.actions.iter().zip(reimp.actions.iter()).enumerate() {
+                assert_eq!(format!("{:?}", oa), format!("{:?}", ra), "action[{}] mismatch in '{}': {:?} vs {:?}", i, orig.name, oa, ra);
+            }
+        }
+
+        // Exact JSON round-trip: re-export reimported and compare
+        let reexport = tokio_test::block_on(export_rules(reimp_sorted.clone())).unwrap();
+        let reimport2 = tokio_test::block_on(import_rules(reexport)).unwrap();
+        assert_eq!(reimp_sorted.len(), reimport2.len());
+        for (a, b) in reimp_sorted.iter().zip(reimport2.iter()) {
+            assert_eq!(format!("{:?}", a), format!("{:?}", b), "double round-trip mismatch for '{}'", a.name);
+        }
+    }
 }

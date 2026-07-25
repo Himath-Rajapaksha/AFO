@@ -446,6 +446,7 @@ mod search_tests {
     use std::sync::{Mutex, OnceLock};
 
     static TEST_DB: OnceLock<Mutex<Connection>> = OnceLock::new();
+    static TEST_MUTEX: Mutex<()> = Mutex::new(());
 
     fn setup_test_db() {
         TEST_DB.get_or_init(|| {
@@ -546,6 +547,7 @@ mod search_tests {
 
     #[test]
     fn test_search_by_query_finds_filename_in_source() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/home/user/Downloads/photo.jpg", "/home/user/Images/photo.jpg", "2026-07-20T10:00:00Z");
         insert_test_entry("move", "/home/user/Downloads/doc.pdf", "/home/user/Documents/doc.pdf", "2026-07-20T11:00:00Z");
@@ -558,6 +560,7 @@ mod search_tests {
 
     #[test]
     fn test_search_by_query_finds_filename_in_dest() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/tmp/a.txt", "/home/user/Documents/report.pdf", "2026-07-20T10:00:00Z");
 
@@ -569,6 +572,7 @@ mod search_tests {
 
     #[test]
     fn test_search_by_operation_type() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
         insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
@@ -582,6 +586,7 @@ mod search_tests {
 
     #[test]
     fn test_search_by_date_range() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-19T10:00:00Z");
         insert_test_entry("move", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T10:00:00Z");
@@ -595,6 +600,7 @@ mod search_tests {
 
     #[test]
     fn test_search_combined_filters_use_and_logic() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
         insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
@@ -609,6 +615,7 @@ mod search_tests {
 
     #[test]
     fn test_search_no_filters_returns_all() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
         insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
@@ -620,6 +627,7 @@ mod search_tests {
 
     #[test]
     fn test_search_query_is_case_insensitive_like() {
+        let _lock = TEST_MUTEX.lock().unwrap();
         setup_test_db();
         insert_test_entry("move", "/home/user/Downloads/PHOTO.jpg", "/tmp/b.txt", "2026-07-20T10:00:00Z");
 

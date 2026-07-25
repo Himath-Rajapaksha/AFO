@@ -1345,3 +1345,62 @@ Phase 1 of v3.1.0 planning pass. Implemented Rule Import/Export and History Sear
 - Search for filename substring → confirm finds entries across full history (not just loaded page)
 - Filter by operation type → confirm only matching entries shown
 - Filter by date range → confirm entries outside range excluded
+
+## 2026-07-25 — v3.1.0 Phase 1 Fix: Conflict Dialog + Malformed Import + Verification
+
+### Conflict Dialog (Rule Import)
+- **Problem**: Import silently replaced rules with same name — no warning, no choice
+- **Fix**: Added conflict resolution dialog in `RuleBuilder.tsx`:
+  - When imported rules share names with existing rules, a dialog appears listing each conflict
+  - Per-rule choice buttons: Replace / Keep Both (renames to "Name (2)") / Skip
+  - "Apply to All" buttons: Replace All / Keep Both All / Skip All
+  - Dialog shows rule name + condition/action count for each conflict
+  - User must explicitly confirm or cancel before any changes are made
+  - Cancel discards the entire import (no partial merges)
+
+### Malformed Import Behavior (Verified)
+All 9 test cases pass — backend rejects bad input cleanly with descriptive errors:
+
+| Input | Result | Error Message |
+|-------|--------|---------------|
+| `package.json` content | REJECTED | "Invalid rules JSON: invalid type: map, expected a sequence" |
+| Empty `{}` | REJECTED | "Invalid rules JSON: invalid type: map, expected a sequence" |
+| Empty `[]` | ACCEPTED | Returns empty vec (no rules imported — frontend shows nothing) |
+| Missing fields `[{"name":"test"}]` | REJECTED | "Invalid rules JSON: missing field `id`" |
+| Empty name rule | REJECTED | "Rule name cannot be empty" |
+| No conditions rule | REJECTED | "Rule 'X' has no conditions" |
+| No actions rule | REJECTED | "Rule 'X' has no actions" |
+| Random text | REJECTED | "Invalid rules JSON: expected value at line 1 column 1" |
+| Valid rule | ACCEPTED | Returns parsed rule |
+
+All errors display in the error banner at top of RuleBuilder — never crashes, never imports garbage.
+
+### Search & Filter Verification (16 tests pass)
+**Test results (all PASS):**
+
+1. **Query finds filename in source path** — PASS: searched "photo", found `/home/user/Downloads/photo.jpg`
+2. **Query finds filename in dest path** — PASS: searched "report", found `/home/user/Documents/report.pdf`
+3. **Operation type filter** — PASS: filtered "copy", only copy entries returned
+4. **Date range filter** — PASS: filtered July 20, only July 20 entries returned
+5. **Combined filters (AND logic)** — PASS: type="move" AND date=July 20 returned only 1 entry (move on July 20), excluded copy on July 20 AND move on July 21
+6. **No filters returns all** — PASS: both entries returned
+7. **Case-insensitive LIKE** — PASS: searched "photo", found "PHOTO.jpg"
+8. **Import validation: package.json** — PASS: rejected
+9. **Import validation: empty object** — PASS: rejected
+10. **Import validation: empty array** — PASS: accepted (0 rules)
+11. **Import validation: missing fields** — PASS: rejected
+12. **Import validation: empty name** — PASS: rejected
+13. **Import validation: no conditions** — PASS: rejected
+14. **Import validation: no actions** — PASS: rejected
+15. **Import validation: random text** — PASS: rejected
+16. **Import validation: valid rule** — PASS: accepted
+
+### Files Modified
+- `src/components/RuleBuilder/RuleBuilder.tsx` — conflict resolution dialog with per-rule choices
+- `src-tauri/src/core/journal.rs` — fixed parameter numbering, added 8 search tests
+- `src-tauri/src/commands.rs` — added 9 import validation tests
+- `src-tauri/Cargo.toml` — added tokio-test dev dependency
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean
+- `cargo test` — ✅ 16 passed, 0 failed
