@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -53,54 +53,10 @@ export function resetTutorial() {
 
 export default function Tutorial({ isOpen, onClose }: TutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) setCurrentStep(0);
   }, [isOpen]);
-
-  // Auto-focus close button on open
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => {
-        modalRef.current?.querySelector<HTMLElement>("button")?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  // Escape key to close + focus trap
-  useEffect(() => {
-    if (!isOpen) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      } else if (e.key === "Tab") {
-        const container = modalRef.current;
-        if (!container) return;
-        const focusables = container.querySelectorAll<HTMLElement>(
-          'button, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, onClose]);
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
@@ -136,10 +92,6 @@ export default function Tutorial({ isOpen, onClose }: TutorialProps) {
         >
           <div className="flex h-full items-center justify-center p-4">
             <motion.div
-              ref={modalRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Tutorial"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -154,7 +106,6 @@ export default function Tutorial({ isOpen, onClose }: TutorialProps) {
               {/* Close button */}
               <button
                 onClick={onClose}
-                aria-label="Close tutorial"
                 className="absolute right-4 top-4 rounded-lg p-1.5 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
                 onMouseEnter={(e) =>

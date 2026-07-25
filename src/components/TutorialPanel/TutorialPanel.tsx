@@ -82,6 +82,8 @@ export default function TutorialPanel() {
             <button
               key={i}
               onClick={() => setCurrentStep(i)}
+              aria-label={`Go to step ${i + 1}`}
+              aria-current={i === currentStep ? "step" : undefined}
               className="h-2.5 w-2.5 rounded-full transition-all duration-200"
               style={{
                 backgroundColor: i === currentStep ? "var(--accent)" : "var(--border-default)",
