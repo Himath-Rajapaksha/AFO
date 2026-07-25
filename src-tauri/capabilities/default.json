@@ -7,10 +7,16 @@
     "core:default",
     "shell:allow-open",
     "dialog:allow-open",
+    "dialog:allow-save",
     "dialog:allow-ask",
     "dialog:allow-confirm",
     "dialog:allow-message",
     "updater:default",
-    "process:default"
+    "process:default",
+    "fs:default",
+    "fs:allow-write-text-file",
+    "fs:allow-read-text-file",
+    "fs:allow-exists",
+    "fs:allow-mkdir"
   ]
 }
