@@ -135,7 +135,7 @@ export default function Sidebar() {
                 transition={{ duration: 0.2 }}
                 className="whitespace-nowrap overflow-hidden"
               >
-                AFO v3.1.0
+                AFO v3.1.1
               </motion.span>
             )}
           </AnimatePresence>
