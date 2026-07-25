@@ -1567,3 +1567,32 @@ Integrated the macOS System Settings-inspired native design system from the `afo
 - `cargo check` — ✅ Clean
 - `npm run build` — ✅ Built successfully
 - CSS variable audit: all `var(--*)` references in panels are defined in theme.css
+
+
+## 2026-07-25 — Storage Panel: Fix "NaN undefined scanned" Bug + Consolidate Bar
+
+### Bug
+The StoragePanel.tsx inline bar divided category bytes by `totalSpace` (disk capacity), not `totalScannedBytes` (actual scanned size). For custom directories where `totalSpace` is 0, this produced `NaN`/`Infinity`. Additionally, `totalScannedBytes` existed in the TypeScript interface but was never rendered — no "X scanned" display.
+
+### Root Cause
+Two diverged bar implementations:
+- `StorageBar.tsx` (shared component) — correctly uses `totalBytes` (scanned size) as denominator, includes free-space segment, label hiding at 8%
+- `StoragePanel.tsx` inline bar — incorrectly uses `totalSpace` (disk capacity) as denominator, no free-space, no label hiding
+
+### Fix
+1. **Removed duplicate `formatBytes`** from StoragePanel.tsx (now imported from `StorageBar.tsx`)
+2. **Replaced inline bar** with `<StorageBar>` component, passing `totalBytes={breakdown.totalScannedBytes}` as denominator
+3. **Added "X scanned" display** — when breakdown is available, shows `formatBytes(breakdown.totalScannedBytes) scanned` instead of free-space text
+4. **Typed `segments`** as `StorageSegment[]` for type safety
+
+### Files Modified
+- `src/components/StoragePanel/StoragePanel.tsx` — consolidated to use `StorageBar`, added "X scanned" display
+
+### Verification
+- `npx tsc --noEmit` — ✅ Clean
+- `npm run build` — ✅ Built successfully
+- Serialization round-trip verified: Rust `total_scanned_bytes` → serde camelCase → `totalScannedBytes` matches TypeScript interface
+- `StorageBar` receives `totalBytes={breakdown.totalScannedBytes}` — denominator is correct
+
+### Decision: Consolidate to StorageBar.tsx
+The inline bar had no advantage over the shared component. `StorageBar.tsx` already handles edge cases (zero total, label hiding, free space). Maintaining two bar implementations caused the drift that led to this bug. Consolidated to single source of truth.

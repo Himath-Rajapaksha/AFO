@@ -5,6 +5,7 @@ import { showToast } from "../Toast";
 import { Card, CardHeader, CardDescription } from "../ui/Card";
 import Button from "../ui/Button";
 import { getSystemDisks, type DiskInfo } from "../../lib/tauri-bridge";
+import { StorageBar, formatBytes, type StorageSegment } from "../ui/StorageBar";
 import folderIcon from "../../assets/folder-icon.png";
 import driveIcon from "../../assets/drive-icon.png";
 
@@ -32,14 +33,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const CUSTOM_DIRS_KEY = "afo-custom-storage-dirs";
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
 
 function formatCapacity(bytes: number): string {
   if (bytes === 0) return "0 GB";
@@ -71,7 +64,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
   const usedSpace = totalSpace - availableSpace;
   const usagePercent = totalSpace > 0 ? (usedSpace / totalSpace) * 100 : 0;
 
-  const segments = breakdown?.categories
+  const segments: StorageSegment[] = breakdown?.categories
     .filter((c) => c.bytes > 0)
     .map((c) => ({
       label: c.label,
@@ -105,24 +98,16 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             {name}
           </span>
           <span className="text-xs shrink-0 ml-2" style={{ color: "var(--text-secondary)" }}>
-            {formatBytes(availableSpace)} free of {formatCapacity(totalSpace)}
+            {breakdown
+              ? `${formatBytes(breakdown.totalScannedBytes)} scanned`
+              : `${formatBytes(availableSpace)} free of ${formatCapacity(totalSpace)}`}
           </span>
         </div>
 
         {/* Usage bar */}
         {breakdown ? (
           <>
-            <div className="h-4 rounded-full overflow-hidden flex" style={{ backgroundColor: "var(--border-default)" }}>
-              {segments.map((s) => (
-                <div
-                  key={s.label}
-                  style={{
-                    width: `${(s.bytes / totalSpace) * 100}%`,
-                    backgroundColor: s.color,
-                  }}
-                />
-              ))}
-            </div>
+            <StorageBar segments={segments} totalBytes={breakdown.totalScannedBytes} />
             {/* Legend */}
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
               {segments.map((s) => (
