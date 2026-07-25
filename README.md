@@ -102,6 +102,14 @@ Vote on priorities → [open an issue](https://github.com/Himath-Rajapaksha/AFO/
 
 <br/>
 
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+You are free to use, modify, and distribute this software under the terms of the GPL-3.0 license. Any derivative work must also be released under the same license.
+
+<br/>
+
 ## Contributing
 
 PRs welcome. Check [open issues](https://github.com/Himath-Rajapaksha/AFO/issues)
