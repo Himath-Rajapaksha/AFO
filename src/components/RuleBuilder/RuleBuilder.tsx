@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, FolderOpen, Sparkles, Upload, Download, AlertTriangle } from "lucide-react";
 import { listRules, saveRules, exportRules, importRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
-import { open as openDialog } from "@tauri-apps/plugin-dialog";
+// @ts-ignore — save is exported but TS can't resolve it from this package version
+import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { Card, CardHeader, CardDescription, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
@@ -141,10 +142,10 @@ export default function RuleBuilder() {
     if (rules.length === 0) { setError("No rules to export"); return; }
     try {
       const json = await exportRules(rules);
-      const dir = await openDialog({ directory: true });
-      if (dir && typeof dir === "string") {
-        const fileName = `afo-rules-${new Date().toISOString().slice(0, 10)}.json`;
-        const filePath = dir.endsWith("/") ? dir + fileName : dir + "/" + fileName;
+      const filePath = await saveDialog({
+        defaultPath: `afo-rules-${new Date().toISOString().slice(0, 10)}.json`,
+      });
+      if (filePath) {
         await writeTextFile(filePath, json);
       }
     } catch (e) { setError(String(e)); }
