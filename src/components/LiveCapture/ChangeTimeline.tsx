@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { type FileChange, getRecentChanges } from "../../lib/tauri-bridge";
 
 const CHANGE_COLORS: Record<string, string> = {
@@ -10,6 +11,7 @@ const CHANGE_COLORS: Record<string, string> = {
 };
 
 export default function ChangeTimeline() {
+  const { t } = useTranslation("capture");
   const [changes, setChanges] = useState<FileChange[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,11 +31,11 @@ export default function ChangeTimeline() {
   }, [refresh]);
 
   if (loading) {
-    return <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>Loading changes...</p>;
+    return <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>{t("loadingChanges")}</p>;
   }
 
   if (changes.length === 0) {
-    return <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>No changes in the last hour</p>;
+    return <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>{t("noChangesLastHour")}</p>;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { FileInfo } from "../../lib/tauri-bridge";
 
 type Mode = "extension" | "date" | "rename";
@@ -82,6 +83,7 @@ export default function PreviewPane({
   dateFormat = "yearmonth",
   renamePattern = "",
 }: PreviewPaneProps) {
+  const { t } = useTranslation();
   const previewItems = useMemo(() => {
     const items: PreviewItem[] = [];
     let counter = 1;
@@ -178,15 +180,15 @@ export default function PreviewPane({
   return (
     <div className="rounded-xl p-5" style={{ border: "1px solid var(--border-default)", backgroundColor: "var(--bg-inset)" }}>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Live Preview</h3>
+        <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{t("preview.livePreview")}</h3>
         <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-          {totalActions} to {mode === "rename" ? "rename" : "move"}
-          {totalSkipped > 0 && `, ${totalSkipped} skipped`}
+          {totalActions} {mode === "rename" ? t("preview.toRename") : t("preview.toMove")}
+          {totalSkipped > 0 && `, ${t("preview.skipped", { count: totalSkipped })}`}
         </span>
       </div>
 
       {previewItems.length === 0 ? (
-        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>No files to preview.</p>
+        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("preview.noFilesToPreview")}</p>
       ) : grouped ? (
         // Extension mode — grouped by category
         <div className="space-y-3">
@@ -198,7 +200,7 @@ export default function PreviewPane({
                 >
                   {category}
                 </span>
-                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{items.length} files</span>
+                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{items.length} {t("preview.files")}</span>
               </div>
               <div className="ml-2 space-y-0.5">
                 {items.map((item) => (

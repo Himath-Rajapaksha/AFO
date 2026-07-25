@@ -1,41 +1,44 @@
 import { Command, Undo2, Settings } from "lucide-react";
-
-const tips = [
-  {
-    icon: Command,
-    shortcut: "Cmd/Ctrl + K",
-    title: "Command Palette",
-    description: "Quick access to all actions and settings",
-  },
-  {
-    icon: Undo2,
-    shortcut: "⌘Z",
-    title: "Undo Anytime",
-    description: "Every operation can be reversed from History",
-  },
-  {
-    icon: Settings,
-    shortcut: "Settings",
-    title: "Customize",
-    description: "Adjust categories, rules, and watch folders",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function TipsStep() {
+  const { t } = useTranslation();
+
+  const tips = [
+    {
+      icon: Command,
+      shortcut: "Cmd/Ctrl + K",
+      title: t("tutorial.commandPalette"),
+      description: t("tutorial.commandPaletteDesc"),
+    },
+    {
+      icon: Undo2,
+      shortcut: "⌘Z",
+      title: t("tutorial.undoAnytimeTip"),
+      description: t("tutorial.undoAnytimeTipDesc"),
+    },
+    {
+      icon: Settings,
+      shortcut: "Settings",
+      title: t("tutorial.customize"),
+      description: t("tutorial.customizeDesc"),
+    },
+  ];
+
   return (
     <div>
       <h2
         className="mb-2 text-xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        Tips & Tricks
+        {t("tutorial.tipsAndTricks")}
       </h2>
 
       <p
         className="mb-6 text-sm"
         style={{ color: "var(--text-secondary)" }}
       >
-        Power-user shortcuts:
+        {t("tutorial.powerUserShortcuts")}
       </p>
 
       <div className="space-y-3">

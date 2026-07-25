@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCcw, RotateCw, Undo2, Zap, Search, X } from "lucide-react";
 import { listen } from "@tauri-apps/api/event";
 import { getHistory, searchHistory, undoLast, undoOperation, redoLast, type JournalEntry, type HistoryFilter } from "../../lib/tauri-bridge";
@@ -30,6 +31,7 @@ interface LiveEvent {
 const STORAGE_KEY_ENABLE_UNDO = "afo:enableUndoRedo";
 
 export default function HistoryPanel() {
+  const { t } = useTranslation("history");
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,30 +116,30 @@ export default function HistoryPanel() {
   async function handleRedo() { setActing(true); try { await redoLast(); setOffset(0); await refresh(0); } catch (e) { setError(String(e)); } finally { setActing(false); } }
   async function handleUndoEntry(id: number) { setActing(true); try { await undoOperation(id); setOffset(0); await refresh(0); } catch (e) { setError(String(e)); } finally { setActing(false); } }
 
-  if (loading) return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>History</h1><p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>Loading...</p></div>;
+  if (loading) return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{t("title")}</h1><p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>{t("common.loading")}</p></div>;
 
   return (
     <div className="flex flex-col gap-5 p-6">
-      <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>History</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Browse past operations and undo or redo them.</p></div>
+      <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{t("title")}</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>{t("description")}</p></div>
 
       {/* History Settings */}
       <Card>
-        <CardHeader>History Settings</CardHeader>
-        <CardRow label="Enable Undo/Redo" description="Show undo/redo controls (journal always records)" control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} label="Enable undo/redo" />} />
-        <CardRow label="Keep Full History" description="Store all operations (always on)" control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled label="Keep full history" />} />
+        <CardHeader>{t("historySettings")}</CardHeader>
+        <CardRow label={t("enableUndoRedo")} description={t("enableUndoRedoDesc")} control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} label={t("enableUndoRedoLabel")} />} />
+        <CardRow label={t("keepFullHistory")} description={t("keepFullHistoryDesc")} control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled label={t("keepFullHistoryLabel")} />} />
       </Card>
 
       {/* Search & Filters */}
       <Card>
-        <CardHeader>Search & Filter</CardHeader>
+        <CardHeader>{t("searchFilter")}</CardHeader>
         <div className="flex flex-col gap-3 mt-2">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-tertiary)" }} />
               <input
                 type="text"
-                placeholder="Search by filename..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg pl-9 pr-8 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -151,7 +153,7 @@ export default function HistoryPanel() {
             </div>
             {hasActiveFilter && (
               <Button variant="secondary" onClick={clearFilters} className="text-xs px-3 py-1.5 gap-1">
-                <X size={12} /> Clear
+                <X size={12} /> {t("clear")}
               </Button>
             )}
           </div>
@@ -162,17 +164,17 @@ export default function HistoryPanel() {
               className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             >
-              <option value="all">All operations</option>
-              <option value="move">Move</option>
-              <option value="copy">Copy</option>
-              <option value="rename">Rename</option>
-              <option value="delete">Delete</option>
+              <option value="all">{t("allOperations")}</option>
+              <option value="move">{t("move")}</option>
+              <option value="copy">{t("copy")}</option>
+              <option value="rename">{t("rename")}</option>
+              <option value="delete">{t("delete")}</option>
             </select>
             <input
               type="date"
               value={filterDateFrom}
               onChange={(e) => setFilterDateFrom(e.target.value)}
-              placeholder="From"
+              placeholder={t("from")}
               className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
@@ -180,7 +182,7 @@ export default function HistoryPanel() {
               type="date"
               value={filterDateTo}
               onChange={(e) => setFilterDateTo(e.target.value)}
-              placeholder="To"
+              placeholder={t("to")}
               className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
@@ -191,10 +193,10 @@ export default function HistoryPanel() {
       {/* Actions - only shown when undo/redo is enabled */}
       {enableUndoRedo && (
         <Card>
-          <CardHeader>Actions</CardHeader>
+          <CardHeader>{t("actions")}</CardHeader>
           <div className="flex gap-3 mt-1">
-            <Button variant="secondary" onClick={handleUndoLast} disabled={acting || entries.length === 0} className="gap-2"><RotateCcw size={14} /> Undo Last</Button>
-            <Button variant="secondary" onClick={handleRedo} disabled={acting} className="gap-2"><RotateCw size={14} /> Redo</Button>
+            <Button variant="secondary" onClick={handleUndoLast} disabled={acting || entries.length === 0} className="gap-2"><RotateCcw size={14} /> {t("undoLast")}</Button>
+            <Button variant="secondary" onClick={handleRedo} disabled={acting} className="gap-2"><RotateCw size={14} /> {t("redo")}</Button>
           </div>
         </Card>
       )}
@@ -205,7 +207,7 @@ export default function HistoryPanel() {
       {liveEvents.length > 0 && (
         <Card>
           <CardHeader>
-            <span className="flex items-center gap-2"><Zap size={14} style={{ color: "var(--success)" }} /> Live Activity</span>
+            <span className="flex items-center gap-2"><Zap size={14} style={{ color: "var(--success)" }} /> {t("liveActivity")}</span>
           </CardHeader>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {liveEvents.map((evt) => {
@@ -233,9 +235,9 @@ export default function HistoryPanel() {
 
       {/* Recent Operations */}
       <Card>
-        <CardHeader>Recent Operations</CardHeader>
+        <CardHeader>{t("recentOperations")}</CardHeader>
         {entries.length === 0 ? (
-          <p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>No history yet. Perform an operation to see it here.</p>
+          <p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>{t("noHistoryYet")}</p>
         ) : (
           <div className="space-y-2">
             {entries.map((entry) => {
@@ -248,8 +250,8 @@ export default function HistoryPanel() {
                     <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>→ <span className="truncate" style={{ color: "var(--text-secondary)" }} title={entry.dest_path}>{entry.dest_path || "—"}</span></div>
                   </div>
                   <div className="shrink-0 text-xs" style={{ color: "var(--text-tertiary)" }}>{new Date(entry.timestamp).toLocaleString()}</div>
-                  {entry.reverted && <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: "var(--bg-inset)", color: "var(--text-tertiary)" }}>Reverted</span>}
-                  {!entry.reverted && enableUndoRedo && <Button variant="secondary" onClick={() => handleUndoEntry(entry.id)} disabled={acting} className="text-xs px-3 py-1.5"><Undo2 size={12} /> Undo</Button>}
+                  {entry.reverted && <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: "var(--bg-inset)", color: "var(--text-tertiary)" }}>{t("common.reverted")}</span>}
+                  {!entry.reverted && enableUndoRedo && <Button variant="secondary" onClick={() => handleUndoEntry(entry.id)} disabled={acting} className="text-xs px-3 py-1.5"><Undo2 size={12} /> {t("common.undo")}</Button>}
                 </div>
               );
             })}
@@ -257,7 +259,7 @@ export default function HistoryPanel() {
         )}
       </Card>
 
-      {hasMore && entries.length > 0 && <Button variant="secondary" onClick={handleLoadMore} className="self-center">Load More</Button>}
+      {hasMore && entries.length > 0 && <Button variant="secondary" onClick={handleLoadMore} className="self-center">{t("loadMore")}</Button>}
     </div>
   );
 }

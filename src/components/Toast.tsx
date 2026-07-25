@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export interface Toast {
   id: string;
@@ -16,6 +17,7 @@ export function showToast(message: string, type: Toast["type"] = "info", undoAct
 }
 
 export default function ToastContainer() {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((toast: Omit<Toast, "id">) => {
@@ -77,12 +79,12 @@ export default function ToastContainer() {
                     color: "var(--text-secondary)",
                   }}
                 >
-                  Undo
+                  {t("toast.undo")}
                 </button>
               )}
               <button
                 onClick={() => removeToast(toast.id)}
-                aria-label="Dismiss notification"
+                aria-label={t("toast.dismissNotification")}
                 className="shrink-0 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
               >

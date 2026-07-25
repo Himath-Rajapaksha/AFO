@@ -1,20 +1,22 @@
 import { Upload, FolderSearch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function QuickStartStep() {
+  const { t } = useTranslation();
   return (
     <div>
       <h2
         className="mb-2 text-xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        Quick Start
+        {t("tutorial.quickStart")}
       </h2>
 
       <p
         className="mb-6 text-sm"
         style={{ color: "var(--text-secondary)" }}
       >
-        Two ways to get started:
+        {t("tutorial.twoWays")}
       </p>
 
       <div className="grid grid-cols-2 gap-4">
@@ -40,13 +42,13 @@ export default function QuickStartStep() {
             className="mb-1 text-sm font-semibold"
             style={{ color: "var(--text-primary)" }}
           >
-            Drag & Drop
+            {t("tutorial.dragDrop")}
           </h3>
           <p
             className="text-xs"
             style={{ color: "var(--text-tertiary)" }}
           >
-            Drop files anywhere on the app
+            {t("tutorial.dragDropDesc")}
           </p>
         </div>
 
@@ -72,13 +74,13 @@ export default function QuickStartStep() {
             className="mb-1 text-sm font-semibold"
             style={{ color: "var(--text-primary)" }}
           >
-            Pick a Folder
+            {t("tutorial.pickFolder")}
           </h3>
           <p
             className="text-xs"
             style={{ color: "var(--text-tertiary)" }}
           >
-            Browse and select a folder to organize
+            {t("tutorial.pickFolderDesc")}
           </p>
         </div>
       </div>

@@ -1,26 +1,29 @@
 import { Inbox, ArrowRight, CheckCircle2 } from "lucide-react";
-
-const steps = [
-  { icon: Inbox, label: "Files in" },
-  { icon: ArrowRight, label: "AFO sorts" },
-  { icon: CheckCircle2, label: "Undo anytime" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function HowItWorksStep() {
+  const { t } = useTranslation();
+
+  const steps = [
+    { icon: Inbox, label: t("tutorial.filesIn") },
+    { icon: ArrowRight, label: t("tutorial.afoSorts") },
+    { icon: CheckCircle2, label: t("tutorial.undoAnytime") },
+  ];
+
   return (
     <div>
       <h2
         className="mb-2 text-xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        How It Works
+        {t("tutorial.howItWorks")}
       </h2>
 
       <p
         className="mb-8 text-sm"
         style={{ color: "var(--text-secondary)" }}
       >
-        Simple, safe, and reversible:
+        {t("tutorial.simpleSafeReversible")}
       </p>
 
       <div className="flex items-center justify-between">

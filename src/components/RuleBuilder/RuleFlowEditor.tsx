@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
   Controls,
@@ -25,9 +26,10 @@ interface TriggerNodeData {
 }
 
 function TriggerNode({ data }: { data: TriggerNodeData }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-afo-purple/40 bg-afo-purple/10 px-4 py-3 text-sm font-medium text-[var(--text-primary)] shadow-lg">
-      <div className="text-[10px] uppercase tracking-wider text-afo-purple mb-1">Trigger</div>
+      <div className="text-[10px] uppercase tracking-wider text-afo-purple mb-1">{t("rules.trigger")}</div>
       {data.label}
       <Handle type="source" position={Position.Bottom} className="!bg-afo-purple" />
     </div>
@@ -42,34 +44,35 @@ interface ConditionNodeData {
 }
 
 function ConditionNode({ data }: { data: ConditionNodeData }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-afo-sky/40 bg-afo-sky/10 px-4 py-3 text-sm text-[var(--text-primary)] shadow-lg min-w-[200px]">
       <Handle type="target" position={Position.Top} className="!bg-afo-sky" />
-      <div className="text-[10px] uppercase tracking-wider text-afo-sky mb-2">Condition</div>
+      <div className="text-[10px] uppercase tracking-wider text-afo-sky mb-2">{t("rules.condition")}</div>
       <div className="space-y-1.5">
         <select
           value={data.field}
           onChange={(e) => data.onUpdate(e.target.value, data.operator, data.value)}
           className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <option value="Extension">Extension</option>
-          <option value="Name">Name</option>
-          <option value="Size">Size</option>
-          <option value="DateCreated">Date Created</option>
-          <option value="DateModified">Date Modified</option>
+          <option value="Extension">{t("rules.fieldExtension")}</option>
+          <option value="Name">{t("rules.fieldName")}</option>
+          <option value="Size">{t("rules.fieldSize")}</option>
+          <option value="DateCreated">{t("rules.dateCreated")}</option>
+          <option value="DateModified">{t("rules.dateModified")}</option>
         </select>
         <select
           value={data.operator}
           onChange={(e) => data.onUpdate(data.field, e.target.value, data.value)}
           className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <option value="Equals">Equals</option>
-          <option value="Contains">Contains</option>
-          <option value="StartsWith">Starts With</option>
-          <option value="EndsWith">Ends With</option>
-          <option value="GreaterThan">Greater Than</option>
-          <option value="LessThan">Less Than</option>
-          <option value="Regex">Regex</option>
+          <option value="Equals">{t("rules.operatorEquals")}</option>
+          <option value="Contains">{t("rules.operatorContains")}</option>
+          <option value="StartsWith">{t("rules.startsWith")}</option>
+          <option value="EndsWith">{t("rules.endsWith")}</option>
+          <option value="GreaterThan">{t("rules.greaterThan")}</option>
+          <option value="LessThan">{t("rules.lessThan")}</option>
+          <option value="Regex">{t("rules.operatorRegex")}</option>
         </select>
         <input
           type="text"
@@ -91,19 +94,20 @@ interface ActionNodeData {
 }
 
 function ActionNode({ data }: { data: ActionNodeData }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-afo-emerald/40 bg-afo-emerald/10 px-4 py-3 text-sm text-[var(--text-primary)] shadow-lg min-w-[200px]">
       <Handle type="target" position={Position.Top} className="!bg-afo-emerald" />
-      <div className="text-[10px] uppercase tracking-wider text-afo-emerald mb-2">Action</div>
+      <div className="text-[10px] uppercase tracking-wider text-afo-emerald mb-2">{t("rules.action")}</div>
       <div className="space-y-1.5">
         <select
           value={data.actionType}
           onChange={(e) => data.onUpdate(e.target.value, data.value)}
           className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <option value="Move">Move</option>
-          <option value="Copy">Copy</option>
-          <option value="Rename">Rename</option>
+          <option value="Move">{t("rules.actionMove")}</option>
+          <option value="Copy">{t("rules.actionCopy")}</option>
+          <option value="Rename">{t("rules.actionRename")}</option>
         </select>
         <input
           type="text"
@@ -132,6 +136,7 @@ interface RuleFlowEditorProps {
 }
 
 export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEditorProps) {
+  const { t } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const nodeIdRef = useRef(1);
@@ -371,17 +376,17 @@ export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEdito
       {/* Toolbar */}
       <div className="flex items-center gap-2 border-b border-[var(--border-default)] px-4 py-2">
         <Button variant="secondary" onClick={handleAddCondition} className="text-xs px-3 py-1.5">
-          + Condition
+          {t("rules.addConditionBtn")}
         </Button>
         <Button variant="secondary" onClick={handleAddAction} className="text-xs px-3 py-1.5">
-          + Action
+          {t("rules.addActionBtn")}
         </Button>
         <div className="flex-1" />
         <Button variant="secondary" onClick={onCancel} className="text-xs px-3 py-1.5">
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button onClick={handleSave} className="text-xs px-3 py-1.5">
-          Save Rule
+          {t("common.saveRule")}
         </Button>
       </div>
 

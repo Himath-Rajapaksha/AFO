@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
@@ -7,6 +8,7 @@ interface DropZoneProps {
 }
 
 export default function DropZone({ onFilesDropped }: DropZoneProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = useCallback((e: DragEvent) => {
@@ -114,10 +116,10 @@ export default function DropZone({ onFilesDropped }: DropZoneProps) {
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
-                Drop files or folders here
+                {t("dropZone.dropFiles")}
               </p>
               <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-                Files will be added to the organize panel
+                {t("dropZone.filesAddedToOrganize")}
               </p>
             </div>
           </motion.div>

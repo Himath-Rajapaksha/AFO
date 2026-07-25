@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useAppStore, type Panel } from "../../lib/store";
 import { undoLast, redoLast } from "../../lib/tauri-bridge";
 import { showToast } from "../Toast";
@@ -26,6 +27,7 @@ export function openCommandPalette() {
 // ── Component ──────────────────────────────────────────
 
 export default function CommandPalette() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,76 +84,76 @@ export default function CommandPalette() {
     () => [
       {
         id: "nav-organize",
-        label: "Go to Organize",
-        category: "Navigate",
+        label: t("commandPalette.goToOrganize"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("organize"),
         keywords: ["organize", "files", "panel"],
       },
       {
         id: "nav-rules",
-        label: "Go to Rule Builder",
-        category: "Navigate",
+        label: t("commandPalette.goToRuleBuilder"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("rules"),
         keywords: ["rules", "builder", "automation"],
       },
       {
         id: "nav-duplicates",
-        label: "Go to Duplicates",
-        category: "Navigate",
+        label: t("commandPalette.goToDuplicates"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("duplicates"),
         keywords: ["duplicates", "dups", "copy"],
       },
       {
         id: "nav-history",
-        label: "Go to History",
-        category: "Navigate",
+        label: t("commandPalette.goToHistory"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("history"),
         keywords: ["history", "undo", "log"],
       },
       {
         id: "nav-settings",
-        label: "Go to Settings",
-        category: "Navigate",
+        label: t("commandPalette.goToSettings"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("settings"),
         keywords: ["settings", "preferences", "config"],
       },
       {
         id: "nav-capture",
-        label: "Go to Live Capture",
-        category: "Navigate",
+        label: t("commandPalette.goToLiveCapture"),
+        category: t("commandPalette.navigate"),
         action: () => navigate("capture"),
         keywords: ["capture", "live", "watch", "monitor"],
       },
       {
         id: "action-undo",
-        label: "Undo Last Operation",
-        category: "Actions",
+        label: t("commandPalette.undoLastOperation"),
+        category: t("commandPalette.actions"),
         action: async () => {
           setOpen(false);
           try {
             const entry = await undoLast();
             if (entry) showToast(`Undid ${entry.operation_type}`, "success");
-            else showToast("Nothing to undo", "info");
-          } catch (e) { showToast(`Undo failed: ${e}`, "error"); }
+            else showToast(t("commandPalette.nothingToUndo"), "info");
+          } catch (e) { showToast(`${t("common.undo")} failed: ${e}`, "error"); }
         },
         keywords: ["undo", "revert", "back"],
       },
       {
         id: "action-redo",
-        label: "Redo Last Operation",
-        category: "Actions",
+        label: t("commandPalette.redoLastOperation"),
+        category: t("commandPalette.actions"),
         action: async () => {
           setOpen(false);
           try {
             const entry = await redoLast();
             if (entry) showToast(`Redid ${entry.operation_type}`, "success");
-            else showToast("Nothing to redo", "info");
+            else showToast(t("commandPalette.nothingToRedo"), "info");
           } catch (e) { showToast(`Redo failed: ${e}`, "error"); }
         },
         keywords: ["redo", "forward"],
       },
     ],
-    [navigate],
+    [navigate, t],
   );
 
   // ── Fuzzy search ─────────────────────────────────────
@@ -276,7 +278,7 @@ export default function CommandPalette() {
       ref={containerRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Command palette"
+      aria-label={t("aria.commandPalette")}
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
       onKeyDown={onKeyDown}
     >
@@ -321,7 +323,7 @@ export default function CommandPalette() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a command…"
+            placeholder={t("commandPalette.typeCommand")}
             className="flex-1 bg-transparent text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ color: textPri }}
           />
@@ -340,7 +342,7 @@ export default function CommandPalette() {
         {/* Results */}
         <div ref={listRef} className="max-h-[360px] overflow-y-auto p-2">
           {filtered.length === 0 && (
-            <div className="py-8 text-center text-sm" style={{ color: textTer }}>No commands found.</div>
+            <div className="py-8 text-center text-sm" style={{ color: textTer }}>{t("commandPalette.noCommandsFound")}</div>
           )}
 
           {[...grouped.entries()].map(([category, commands]) => (
@@ -397,14 +399,14 @@ export default function CommandPalette() {
               className="rounded px-1.5 py-0.5"
               style={{ border: `1px solid ${panelBorder}`, backgroundColor: accentSoft }}
             >↑↓</kbd>
-            navigate
+            {t("common.navigate")}
           </span>
           <span className="flex items-center gap-1">
             <kbd
               className="rounded px-1.5 py-0.5"
               style={{ border: `1px solid ${panelBorder}`, backgroundColor: accentSoft }}
             >↵</kbd>
-            select
+            {t("common.select")}
           </span>
           <span className="flex items-center gap-1">
             <kbd
@@ -413,7 +415,7 @@ export default function CommandPalette() {
             >
               {modKey}K
             </kbd>
-            toggle
+            {t("common.toggle")}
           </span>
         </div>
       </div>

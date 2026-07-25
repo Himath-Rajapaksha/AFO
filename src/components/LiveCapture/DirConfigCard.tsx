@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Scan, Trash2 } from "lucide-react";
 import { showToast } from "../Toast";
 import { type DirectoryConfig, type DirStats, type CaptureMode, setCaptureMode, setDirEnabled, scanAndIndex, unwatchDirectory, removeDirectory } from "../../lib/tauri-bridge";
@@ -26,14 +27,26 @@ interface Props {
 }
 
 export default function DirConfigCard({ config, stats, onRemoved }: Props) {
+  const { t } = useTranslation(["capture", "common", "app"]);
   const [scanning, setScanning] = useState(false);
+
+  const modeLabelMap: Record<CaptureMode, string> = {
+    auto_organize: t("capture:auto"),
+    notify_only: t("capture:notify"),
+    full_capture: t("capture:capture"),
+  };
+  const modeDescMap: Record<CaptureMode, string> = {
+    auto_organize: t("capture:autoDesc"),
+    notify_only: t("capture:notifyDesc"),
+    full_capture: t("capture:captureDesc"),
+  };
 
   async function handleModeChange(mode: CaptureMode) {
     try {
       await setCaptureMode(config.path, mode);
       onRemoved();
     } catch (e) {
-      showToast(`Failed to change mode: ${e}`, "error");
+      showToast(t("app:failedToChangeMode", { error: String(e) }), "error");
     }
   }
 
@@ -42,7 +55,7 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
       await setDirEnabled(config.path, enabled);
       onRemoved();
     } catch (e) {
-      showToast(`Failed to toggle dir: ${e}`, "error");
+      showToast(t("app:failedToToggleDir", { error: String(e) }), "error");
     }
   }
 
@@ -50,10 +63,10 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
     setScanning(true);
     try {
       const count = await scanAndIndex(config.path);
-      showToast(`Indexed ${count} files in ${config.path.split(/[\\/]/).pop()}`, "success");
+      showToast(t("app:indexedFilesIn", { count: count, dir: config.path.split(/[\\/]/).pop() || config.path }), "success");
       onRemoved();
     } catch (e) {
-      showToast(`Scan failed: ${e}`, "error");
+      showToast(t("app:scanFailed", { error: String(e) }), "error");
     } finally {
       setScanning(false);
     }
@@ -67,10 +80,10 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
       } catch { /* ignore - dir may not have been actively watched */ }
       // Always remove from capture config
       await removeDirectory(config.path);
-      showToast(`Removed: ${config.path}`, "info");
+      showToast(t("app:removedFromCapture", { dir: config.path }), "info");
       onRemoved();
     } catch (e) {
-      showToast(`Failed to remove: ${e}`, "error");
+      showToast(t("app:failedToRemove", { error: String(e) }), "error");
     }
   }
 
@@ -82,11 +95,11 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
           {config.path}
         </span>
         <Button variant="secondary" onClick={handleScan} disabled={scanning} className="text-xs px-2 py-1 gap-1">
-          <Scan size={12} /> {scanning ? "Scanning..." : "Scan"}
+          <Scan size={12} /> {scanning ? t("common:scanning") : t("common:scan")}
         </Button>
         <button
           onClick={handleRemove}
-          aria-label="Remove directory"
+          aria-label={t("capture:removeDirectory")}
           className="flex items-center justify-center rounded-lg p-1.5 transition-colors"
           style={{ color: "var(--text-tertiary)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
@@ -97,7 +110,7 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
       </div>
 
       {/* Mode selector */}
-      <div className="flex gap-1.5" role="tablist" aria-label="Capture mode">
+      <div className="flex gap-1.5" role="tablist" aria-label={t("capture:captureMode")}>
         {MODES.map((m) => (
           <button
             key={m.value}
@@ -111,9 +124,9 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
               color: config.capture_mode === m.value ? "var(--accent)" : "var(--text-tertiary)",
               border: `1px solid ${config.capture_mode === m.value ? "var(--accent)" : "var(--border-default)"}`,
             }}
-            title={m.description}
+            title={modeDescMap[m.value]}
           >
-            {m.label}
+            {modeLabelMap[m.value]}
           </button>
         ))}
       </div>

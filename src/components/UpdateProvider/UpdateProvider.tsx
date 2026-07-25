@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { X, Download, RefreshCw } from "lucide-react";
@@ -10,6 +11,7 @@ interface UpdateInfo {
 }
 
 export default function UpdateProvider() {
+  const { t } = useTranslation();
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -96,7 +98,7 @@ export default function UpdateProvider() {
           <RefreshCw size={16} style={{ color: "var(--success)" }} />
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              Update Available
+              {t("update.updateAvailable")}
             </p>
             <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
               AFO {updateInfo.version}
@@ -104,7 +106,7 @@ export default function UpdateProvider() {
             </p>
           </div>
         </div>
-        <button onClick={handleDismiss} aria-label="Dismiss update notification" style={{ color: "var(--text-tertiary)" }}>
+        <button onClick={handleDismiss} aria-label={t("aria.dismissUpdateNotification")} style={{ color: "var(--text-tertiary)" }}>
           <X size={14} />
         </button>
       </div>
@@ -130,7 +132,7 @@ export default function UpdateProvider() {
             />
           </div>
           <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>
-            {progress < 100 ? `Downloading... ${progress}%` : "Installing..."}
+            {progress < 100 ? t("update.downloading", { progress }) : t("update.installing")}
           </p>
         </div>
       ) : (
@@ -140,14 +142,14 @@ export default function UpdateProvider() {
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
             style={{ backgroundColor: "var(--accent)", color: "white" }}
           >
-            <Download size={12} /> Install Update
+            <Download size={12} /> {t("update.installUpdate")}
           </button>
           <button
             onClick={handleDismiss}
             className="rounded-lg px-3 py-1.5 text-xs transition-colors"
             style={{ backgroundColor: "var(--bg-inset)", color: "var(--text-secondary)", border: "1px solid var(--border-default)" }}
           >
-            Skip
+            {t("update.skip")}
           </button>
         </div>
       )}

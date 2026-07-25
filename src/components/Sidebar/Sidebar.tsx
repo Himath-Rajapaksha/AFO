@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FolderOpen, GitBranch, Copy, HardDrive, History, Settings, Radio, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAppStore, type Panel } from "../../lib/store";
 import logo from "../../assets/logo.png";
 
-const NAV_ITEMS: { id: Panel; label: string; icon: typeof FolderOpen; cssVar: string }[] = [
-  { id: "organize", label: "Organize", icon: FolderOpen, cssVar: "--icon-organize" },
-  { id: "capture", label: "Live Capture", icon: Radio, cssVar: "--icon-capture" },
-  { id: "rules", label: "Rule Builder", icon: GitBranch, cssVar: "--icon-rules" },
-  { id: "duplicates", label: "Duplicates", icon: Copy, cssVar: "--icon-duplicates" },
-  { id: "storage", label: "Storage", icon: HardDrive, cssVar: "--icon-storage" },
-  { id: "history", label: "History", icon: History, cssVar: "--icon-history" },
-  { id: "tutorial", label: "Tutorial", icon: BookOpen, cssVar: "--icon-tutorial" },
-  { id: "settings", label: "Settings", icon: Settings, cssVar: "--icon-settings" },
+const NAV_ITEMS: { id: Panel; labelKey: string; icon: typeof FolderOpen; cssVar: string }[] = [
+  { id: "organize", labelKey: "sidebar.organize", icon: FolderOpen, cssVar: "--icon-organize" },
+  { id: "capture", labelKey: "sidebar.capture", icon: Radio, cssVar: "--icon-capture" },
+  { id: "rules", labelKey: "sidebar.rules", icon: GitBranch, cssVar: "--icon-rules" },
+  { id: "duplicates", labelKey: "sidebar.duplicates", icon: Copy, cssVar: "--icon-duplicates" },
+  { id: "storage", labelKey: "sidebar.storage", icon: HardDrive, cssVar: "--icon-storage" },
+  { id: "history", labelKey: "sidebar.history", icon: History, cssVar: "--icon-history" },
+  { id: "tutorial", labelKey: "sidebar.tutorial", icon: BookOpen, cssVar: "--icon-tutorial" },
+  { id: "settings", labelKey: "sidebar.settings", icon: Settings, cssVar: "--icon-settings" },
 ];
 
 const STORAGE_KEY = "afo-sidebar-collapsed";
@@ -24,6 +25,7 @@ function readCollapsed(): boolean {
 }
 
 export default function Sidebar() {
+  const { t } = useTranslation();
   const activePanel = useAppStore((s) => s.activePanel);
   const setActivePanel = useAppStore((s) => s.setActivePanel);
   const [collapsed, setCollapsed] = useState(readCollapsed);
@@ -77,7 +79,7 @@ export default function Sidebar() {
               key={item.id}
               onClick={() => setActivePanel(item.id)}
               aria-current={active ? "page" : undefined}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? t(item.labelKey) : undefined}
               className={`group relative flex w-full items-center rounded-lg text-left text-sm transition-colors ${
                 collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
               }`}
@@ -107,7 +109,7 @@ export default function Sidebar() {
                     transition={{ duration: 0.2 }}
                     className="relative z-10 truncate font-medium whitespace-nowrap overflow-hidden"
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -124,7 +126,7 @@ export default function Sidebar() {
             collapsed ? "justify-center px-0 py-1.5" : "gap-2 px-5 py-1.5"
           }`}
           style={{ color: "var(--text-tertiary)" }}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
         >
           {collapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           <AnimatePresence>
@@ -136,7 +138,7 @@ export default function Sidebar() {
                 transition={{ duration: 0.2 }}
                 className="whitespace-nowrap overflow-hidden"
               >
-                AFO v3.1.1
+                {t('sidebar.version')}
               </motion.span>
             )}
           </AnimatePresence>

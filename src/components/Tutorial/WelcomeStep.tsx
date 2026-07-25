@@ -1,6 +1,8 @@
 import { FolderOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function WelcomeStep() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center text-center">
       {/* Logo / Icon */}
@@ -19,15 +21,14 @@ export default function WelcomeStep() {
         className="mb-3 text-2xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        Welcome to AFO
+        {t("tutorial.welcome")}
       </h2>
 
       <p
         className="max-w-sm text-base leading-relaxed"
         style={{ color: "var(--text-secondary)" }}
       >
-        Organize your files automatically with smart rules. One click to sort,
-        rename, or clean up any folder.
+        {t("tutorial.welcomeDesc")}
       </p>
     </div>
   );

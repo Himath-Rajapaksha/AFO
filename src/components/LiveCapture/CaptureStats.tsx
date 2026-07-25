@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { CaptureStats as CaptureStatsType } from "../../lib/tauri-bridge";
 
 function formatBytes(bytes: number): string {
@@ -9,14 +10,15 @@ function formatBytes(bytes: number): string {
 }
 
 export default function CaptureStats({ stats }: { stats: CaptureStatsType | null }) {
+  const { t } = useTranslation("capture");
   if (!stats) return null;
 
   const items = [
-    { label: "Indexed Files", value: stats.total_indexed_files.toLocaleString() },
-    { label: "Changes Today", value: stats.total_changes_today.toLocaleString() },
-    { label: "Pending Actions", value: stats.pending_actions.toLocaleString(), accent: stats.pending_actions > 0 },
-    { label: "Watched Dirs", value: stats.watched_dirs_count.toLocaleString() },
-    { label: "Disk Usage", value: formatBytes(stats.total_disk_usage) },
+    { label: t("capture:indexedFiles"), value: stats.total_indexed_files.toLocaleString() },
+    { label: t("capture:changesToday"), value: stats.total_changes_today.toLocaleString() },
+    { label: t("capture:pendingActionsCount"), value: stats.pending_actions.toLocaleString(), accent: stats.pending_actions > 0 },
+    { label: t("capture:watchedDirs"), value: stats.watched_dirs_count.toLocaleString() },
+    { label: t("capture:diskUsage"), value: formatBytes(stats.total_disk_usage) },
   ];
 
   return (

@@ -1,6 +1,8 @@
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ReadyStep() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center text-center">
       {/* Celebration Icon */}
@@ -19,15 +21,14 @@ export default function ReadyStep() {
         className="mb-3 text-2xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        You're Ready!
+        {t("tutorial.youReady")}
       </h2>
 
       <p
         className="max-w-sm text-base leading-relaxed"
         style={{ color: "var(--text-secondary)" }}
       >
-        Start organizing your files. You can always re-open this tutorial from
-        Settings if you need a refresher.
+        {t("tutorial.startOrganizing")}
       </p>
     </div>
   );

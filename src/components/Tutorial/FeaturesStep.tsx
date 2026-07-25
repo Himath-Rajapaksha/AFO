@@ -1,43 +1,46 @@
 import { FolderOpen, GitBranch, Copy, Radio } from "lucide-react";
-
-const features = [
-  {
-    icon: FolderOpen,
-    title: "Organize",
-    description: "Sort files by type, date, or custom patterns",
-  },
-  {
-    icon: GitBranch,
-    title: "Rule Builder",
-    description: "Create visual rules to automate organization",
-  },
-  {
-    icon: Copy,
-    title: "Duplicates",
-    description: "Find and remove duplicate files safely",
-  },
-  {
-    icon: Radio,
-    title: "Live Capture",
-    description: "Watch folders and auto-sort new files",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function FeaturesStep() {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: FolderOpen,
+      title: t("sidebar.organize"),
+      description: t("tutorial.featureOrganize"),
+    },
+    {
+      icon: GitBranch,
+      title: t("sidebar.rules"),
+      description: t("tutorial.featureRuleBuilder"),
+    },
+    {
+      icon: Copy,
+      title: t("sidebar.duplicates"),
+      description: t("tutorial.featureDuplicates"),
+    },
+    {
+      icon: Radio,
+      title: t("sidebar.capture"),
+      description: t("tutorial.featureLiveCapture"),
+    },
+  ];
+
   return (
     <div>
       <h2
         className="mb-2 text-xl font-bold"
         style={{ color: "var(--text-primary)" }}
       >
-        Core Features
+        {t("tutorial.coreFeatures")}
       </h2>
 
       <p
         className="mb-6 text-sm"
         style={{ color: "var(--text-secondary)" }}
       >
-        Everything you need to stay organized:
+        {t("tutorial.everythingYouNeed")}
       </p>
 
       <div className="space-y-3">

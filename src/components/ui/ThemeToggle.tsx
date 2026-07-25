@@ -1,4 +1,5 @@
 import './ThemeToggle.css';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../lib/ThemeProvider';
 
 /**
@@ -10,6 +11,7 @@ import { useTheme } from '../../lib/ThemeProvider';
  * unchecked = light mode (sun visible, blue sky + cloud)
  */
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -18,7 +20,7 @@ export function ThemeToggle() {
         type="checkbox"
         checked={theme === 'dark'}
         onChange={toggleTheme}
-        aria-label="Switch between light and dark theme"
+        aria-label={t("aria.switchTheme")}
       />
       <span className="theme-slider">
         <div className="theme-star theme-star_1" />

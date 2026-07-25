@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { FolderOpen } from "lucide-react";
 import { showToast } from "../Toast";
 import {
@@ -24,6 +25,7 @@ import ChangeTimeline from "./ChangeTimeline";
 type Tab = "dashboard" | "index" | "timeline";
 
 export default function LiveCapturePanel() {
+  const { t } = useTranslation(["capture", "common", "app"]);
   const [config, setConfig] = useState<CaptureConfig | null>(null);
   const [stats, setStats] = useState<CaptureStatsType | null>(null);
   const [dirStats, setDirStats] = useState<Record<string, DirStats>>({});
@@ -76,11 +78,11 @@ export default function LiveCapturePanel() {
       watchOk = true;
     } catch (e) {
       // Watching failed — dir is still in capture config for manual scanning
-      showToast(`Added to capture config, but real-time watching failed: ${e}`, "info");
+      showToast(t("app:addedToCaptureButWatchFailed", { error: String(e) }), "info");
     }
 
     if (watchOk) {
-      showToast(`Now watching: ${dir}`, "success");
+      showToast(t("app:nowWatching", { dir }), "success");
     }
 
     setNewDir("");
@@ -98,30 +100,30 @@ export default function LiveCapturePanel() {
         setNewDir(dirPath);
       }
     } catch (e) {
-      showToast(`Directory picker failed: ${e}`, "error");
+      showToast(t("app:directoryPickerFailed", { error: String(e) }), "error");
     }
   }
 
   if (loading) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Live Capture</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>Loading...</p>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{t("capture:title")}</h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>{t("capture:loading")}</p>
       </div>
     );
   }
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "index", label: "File Index" },
-    { id: "timeline", label: "Timeline" },
+    { id: "dashboard", label: t("capture:dashboard") },
+    { id: "index", label: t("capture:fileIndex") },
+    { id: "timeline", label: t("capture:timeline") },
   ];
 
   return (
     <div className="flex flex-col gap-5 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Live Capture</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Real-time monitoring and control for watched directories.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{t("capture:title")}</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>{t("capture:description")}</p>
       </div>
 
       {/* Stats bar */}
@@ -149,11 +151,11 @@ export default function LiveCapturePanel() {
         <div className="space-y-4">
           {/* Add directory */}
           <Card>
-            <CardHeader>Add Watched Directory</CardHeader>
-            <CardDescription>Add a new directory to monitor with Live Capture.</CardDescription>
+            <CardHeader>{t("capture:addWatchedDirectory")}</CardHeader>
+            <CardDescription>{t("capture:addWatchedDirectoryDesc")}</CardDescription>
             <div className="flex items-center gap-2 mt-2">
               <Button variant="secondary" onClick={handlePickDir} className="text-xs gap-1">
-                <FolderOpen size={12} /> Browse
+                <FolderOpen size={12} /> {t("common:browse")}
               </Button>
               <input
                 type="text"
@@ -164,7 +166,7 @@ export default function LiveCapturePanel() {
                 className="flex-1 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
               />
-              <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>
+              <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">{t("common:add")}</Button>
             </div>
           </Card>
 
@@ -185,7 +187,7 @@ export default function LiveCapturePanel() {
           {config && config.directories.length === 0 && (
             <Card>
               <p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>
-                No directories being watched. Add one above to get started.
+                {t("capture:noDirectoriesWatching")}
               </p>
             </Card>
           )}
@@ -193,7 +195,7 @@ export default function LiveCapturePanel() {
           {/* Pending actions */}
           {pending.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>Pending Actions</h3>
+              <h3 className="text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>{t("capture:pendingActions")}</h3>
               <PendingActionsList actions={pending} onRefresh={refresh} />
             </div>
           )}

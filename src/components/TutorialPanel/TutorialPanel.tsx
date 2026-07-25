@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "../../lib/store";
 import WelcomeStep from "../Tutorial/WelcomeStep";
 import QuickStartStep from "../Tutorial/QuickStartStep";
@@ -21,6 +22,7 @@ const steps = [
 ];
 
 export default function TutorialPanel() {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const setActivePanel = useAppStore((s) => s.setActivePanel);
 
@@ -52,7 +54,7 @@ export default function TutorialPanel() {
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
           >
-            Skip
+            {t("common.skip")}
           </button>
         )}
       </div>
@@ -82,7 +84,7 @@ export default function TutorialPanel() {
             <button
               key={i}
               onClick={() => setCurrentStep(i)}
-              aria-label={`Go to step ${i + 1}`}
+              aria-label={t("tutorial.goToStep", { step: i + 1 })}
               aria-current={i === currentStep ? "step" : undefined}
               className="h-2.5 w-2.5 rounded-full transition-all duration-200"
               style={{
@@ -102,7 +104,7 @@ export default function TutorialPanel() {
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            Start Organizing
+            {t("tutorial.startOrganizingBtn")}
           </button>
         ) : (
           <button
@@ -112,7 +114,7 @@ export default function TutorialPanel() {
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            Next →
+            {t("common.next")}
           </button>
         )}
       </div>

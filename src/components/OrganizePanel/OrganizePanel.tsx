@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { useTranslation } from "react-i18next";
 import { FolderOpen, Play, Search } from "lucide-react";
 import Toggle from "../ui/Toggle";
 import {
@@ -29,6 +30,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function OrganizePanel() {
+  const { t } = useTranslation();
   const [dirPath, setDirPath] = useState("");
   const [dirError, setDirError] = useState("");
   const [mode, setMode] = useState<Mode>("extension");
@@ -61,7 +63,7 @@ export default function OrganizePanel() {
     setFiles([]);
     setResult(null);
     clearDroppedPaths();
-    showToast(`Added ${droppedPaths.length} path(s)`, "info");
+    showToast(t('app.addedPaths', { count: droppedPaths.length }), "info");
   }, [droppedPaths, clearDroppedPaths]);
 
   async function pickDirectory() {
@@ -69,7 +71,7 @@ export default function OrganizePanel() {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({ directory: true, multiple: false });
       if (selected && typeof selected === "string") { setDirPath(selected); setFiles([]); setResult(null); }
-    } catch { setDirError("Directory picker not available."); }
+    } catch { setDirError(t('app.directoryPickerNotAvailable')); }
   }
 
   async function handleScan() {
@@ -89,8 +91,8 @@ export default function OrganizePanel() {
         case "rename": res = await batchRename(dirPath, renamePattern, dryRun); break;
       }
       setResult(res);
-      if (res.moved > 0) showToast(dryRun ? `Preview: ${res.moved} files` : `Organized ${res.moved} files`, "success");
-    } catch (e) { setResult({ total_files: 0, moved: 0, skipped: 0, errors: [String(e)], dry_run: dryRun }); showToast(`Error: ${e}`, "error"); }
+      if (res.moved > 0) showToast(dryRun ? t('app.preview', { count: res.moved }) : t('app.organized', { count: res.moved }), "success");
+    } catch (e) { setResult({ total_files: 0, moved: 0, skipped: 0, errors: [String(e)], dry_run: dryRun }); showToast(t('app.error', { error: String(e) }), "error"); }
     finally { setExecuting(false); setProgress(null); }
   }
 
@@ -104,18 +106,18 @@ export default function OrganizePanel() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Organize Files</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Select a directory and choose how to organize your files.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{t('organize.title')}</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>{t('organize.description')}</p>
       </div>
 
       {/* Directory Picker */}
       <Card>
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={pickDirectory} className="gap-2">
-            <FolderOpen size={14} /> Choose Directory
+            <FolderOpen size={14} /> {t('organize.chooseDirectory')}
           </Button>
           <div className="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: "var(--bg-inset)", color: dirPath ? "var(--text-primary)" : "var(--text-tertiary)" }}>
-            {dirPath || "No directory selected"}
+            {dirPath || t('organize.noDirectorySelected')}
           </div>
         </div>
         {dirError && <p className="mt-2 text-xs" style={{ color: "var(--danger)" }}>{dirError}</p>}
@@ -123,24 +125,31 @@ export default function OrganizePanel() {
 
       {/* Mode */}
       <Card>
-        <CardHeader>Organize Mode</CardHeader>
+        <CardHeader>{t('organize.organizeMode')}</CardHeader>
         <SegmentedControl
-          options={["By Extension", "By Date", "Batch Rename"]}
-          value={["By Extension", "By Date", "Batch Rename"][["extension", "date", "rename"].indexOf(mode)]}
-          onChange={(v) => { const m: Mode[] = ["extension", "date", "rename"]; setMode(m[["By Extension", "By Date", "Batch Rename"].indexOf(v)]); setResult(null); }}
+          options={[
+            { value: "extension" as Mode, label: t('organize.byExtension') },
+            { value: "date" as Mode, label: t('organize.byDate') },
+            { value: "rename" as Mode, label: t('organize.batchRename') },
+          ]}
+          value={mode}
+          onChange={(v) => { setMode(v); setResult(null); }}
           layoutId="organize-mode"
         />
         {mode === "date" && (
           <div className="mt-3">
-            <CardRow label="Date Format" control={
-              <SegmentedControl options={["Year/Month", "Full Date"]} value={dateFormat === "yearmonth" ? "Year/Month" : "Full Date"} onChange={(v) => setDateFormat(v === "Year/Month" ? "yearmonth" : "fulldate")} size="sm" layoutId="organize-dateformat" />
+            <CardRow label={t('organize.dateFormat')} control={
+              <SegmentedControl options={[
+                { value: "yearmonth" as const, label: t('organize.yearMonth') },
+                { value: "fulldate" as const, label: t('organize.fullDate') },
+              ]} value={dateFormat} onChange={(v) => setDateFormat(v)} size="sm" layoutId="organize-dateformat" />
             } />
           </div>
         )}
         {mode === "rename" && (
           <div className="mt-3 space-y-2">
-            <CardRow label="Rename Pattern" description='Use {name}, {ext}, {counter}' control={
-              <input type="text" value={renamePattern} onChange={(e) => setRenamePattern(e.target.value)} placeholder="{name}_{counter}.{ext}" aria-label="Rename pattern"
+            <CardRow label={t('organize.renamePattern')} description={t('organize.renamePatternDesc')} control={
+              <input type="text" value={renamePattern} onChange={(e) => setRenamePattern(e.target.value)} placeholder="{name}_{counter}.{ext}" aria-label={t('aria.renamePattern')}
                 className="w-48 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
             } />
           </div>
@@ -149,18 +158,18 @@ export default function OrganizePanel() {
 
       {/* Options */}
       <Card>
-        <CardRow label="Preview only (dry run)" control={
-          <Toggle checked={dryRun} onChange={setDryRun} label="Preview only (dry run)" />
+        <CardRow label={t('organize.previewOnly')} control={
+          <Toggle checked={dryRun} onChange={setDryRun} label={t('organize.previewOnlyLabel')} />
         } />
       </Card>
 
       {/* Actions */}
       <div className="flex gap-3">
         <Button variant="secondary" onClick={handleScan} disabled={!dirPath || scanning} className="gap-2">
-          <Search size={14} /> {scanning ? "Scanning..." : "Scan"}
+          <Search size={14} /> {scanning ? t('organize.scanning') : t('organize.scan')}
         </Button>
         <Button onClick={handleExecute} disabled={!dirPath || executing || (mode === "rename" && !renamePattern)} className="gap-2">
-          <Play size={14} /> {executing ? "Running..." : "Execute"}
+          <Play size={14} /> {executing ? t('organize.running') : t('organize.execute')}
         </Button>
       </div>
 
@@ -168,7 +177,7 @@ export default function OrganizePanel() {
       {progress && (
         <Card>
           <div className="mb-2 flex items-center justify-between text-xs" style={{ color: "var(--text-secondary)" }}>
-            <span>Processing: <span style={{ color: "var(--text-primary)" }}>{progress.file}</span></span>
+            <span>{t('organize.processing')} <span style={{ color: "var(--text-primary)" }}>{progress.file}</span></span>
             <span>{progress.current} / {progress.total}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full" style={{ backgroundColor: "var(--bg-inset)" }}>
@@ -181,17 +190,17 @@ export default function OrganizePanel() {
       {result && (
         <Card>
           <div className="flex items-center gap-2 mb-3">
-            <CardHeader>Result</CardHeader>
-            {result.dry_run && <span className="rounded-md px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent)" }}>Dry Run</span>}
+            <CardHeader>{t('organize.result')}</CardHeader>
+            {result.dry_run && <span className="rounded-md px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent)" }}>{t('organize.dryRun')}</span>}
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div><div className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{result.total_files}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Total Files</div></div>
-            <div><div className="text-2xl font-bold" style={{ color: "var(--success)" }}>{result.moved}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Moved</div></div>
-            <div><div className="text-2xl font-bold" style={{ color: "var(--text-secondary)" }}>{result.skipped}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Skipped</div></div>
+            <div><div className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{result.total_files}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.totalFiles')}</div></div>
+            <div><div className="text-2xl font-bold" style={{ color: "var(--success)" }}>{result.moved}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.moved')}</div></div>
+            <div><div className="text-2xl font-bold" style={{ color: "var(--text-secondary)" }}>{result.skipped}</div><div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.skipped')}</div></div>
           </div>
           {result.errors.length > 0 && (
             <div className="mt-3 rounded-lg p-3" style={{ backgroundColor: "var(--accent-soft)" }}>
-              <p className="mb-1 text-xs font-medium" style={{ color: "var(--danger)" }}>Errors</p>
+              <p className="mb-1 text-xs font-medium" style={{ color: "var(--danger)" }}>{t('organize.errors')}</p>
               <ul className="space-y-0.5">{result.errors.map((err, i) => <li key={i} className="text-xs" style={{ color: "var(--danger)" }}>{err}</li>)}</ul>
             </div>
           )}
@@ -202,21 +211,21 @@ export default function OrganizePanel() {
       {files.length > 0 && (
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <CardHeader>Scanned Files ({files.length})</CardHeader>
-            <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>Showing {displayedFiles.length} of {files.length}</span>
+            <CardHeader>{t('organize.scannedFiles', { count: files.length })}</CardHeader>
+            <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.showing', { shown: displayedFiles.length, total: files.length })}</span>
           </div>
           <div className="overflow-hidden rounded-lg" style={{ border: "1px solid var(--border-default)" }}>
             <table className="w-full text-left text-sm">
               <thead><tr style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: "var(--bg-inset)" }}>
-                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Name</th>
-                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Ext</th>
-                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Size</th>
+                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t('organize.name')}</th>
+                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t('organize.ext')}</th>
+                <th className="px-3 py-2 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t('organize.size')}</th>
               </tr></thead>
               <tbody>{displayedFiles.map((f, i) => (
                 <tr key={i} role="button" tabIndex={0}
                   onClick={() => handleFileClick(f.path)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleFileClick(f.path); } }}
-                  aria-label={`View metadata for ${f.name}`}
+                  aria-label={t('organize.viewMetadataFor', { name: f.name })}
                   className="cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: selectedFile === f.path ? "var(--accent-soft)" : "transparent" }}>
                   <td className="max-w-[240px] truncate px-3 py-1.5" style={{ color: "var(--text-primary)" }}>{f.name}</td>
@@ -235,34 +244,34 @@ export default function OrganizePanel() {
       {selectedFile && metadata && (
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <CardHeader>File Metadata</CardHeader>
-            <button onClick={() => { setSelectedFile(null); setMetadata(null); }} className="text-xs" style={{ color: "var(--text-tertiary)" }}>Close</button>
+            <CardHeader>{t('organize.fileMetadata')}</CardHeader>
+            <button onClick={() => { setSelectedFile(null); setMetadata(null); }} className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.close')}</button>
           </div>
           <div className="text-xs mb-3 truncate" style={{ color: "var(--text-secondary)" }}>{selectedFile}</div>
           {metadata.exif && (
             <div className="mb-3">
-              <div className="mb-2 text-xs font-medium" style={{ color: "var(--info)" }}>EXIF Data</div>
+              <div className="mb-2 text-xs font-medium" style={{ color: "var(--info)" }}>{t('organize.exifData')}</div>
               <div className="grid grid-cols-2 gap-1.5 text-xs">
-                {metadata.exif.camera_make && <CardRow label="Make" rightValue={metadata.exif.camera_make} />}
-                {metadata.exif.camera_model && <CardRow label="Model" rightValue={metadata.exif.camera_model} />}
-                {metadata.exif.date_taken && <CardRow label="Date Taken" rightValue={metadata.exif.date_taken} />}
-                {metadata.exif.gps && <CardRow label="GPS" rightValue={metadata.exif.gps} />}
-                {metadata.exif.exposure && <CardRow label="Exposure" rightValue={metadata.exif.exposure} />}
+                {metadata.exif.camera_make && <CardRow label={t('organize.make')} rightValue={metadata.exif.camera_make} />}
+                {metadata.exif.camera_model && <CardRow label={t('organize.model')} rightValue={metadata.exif.camera_model} />}
+                {metadata.exif.date_taken && <CardRow label={t('organize.dateTaken')} rightValue={metadata.exif.date_taken} />}
+                {metadata.exif.gps && <CardRow label={t('organize.gps')} rightValue={metadata.exif.gps} />}
+                {metadata.exif.exposure && <CardRow label={t('organize.exposure')} rightValue={metadata.exif.exposure} />}
               </div>
             </div>
           )}
           {metadata.audio && (
             <div>
-              <div className="mb-2 text-xs font-medium" style={{ color: "var(--success)" }}>Audio Tags</div>
+              <div className="mb-2 text-xs font-medium" style={{ color: "var(--success)" }}>{t('organize.audioTags')}</div>
               <div className="grid grid-cols-2 gap-1.5 text-xs">
-                {metadata.audio.artist && <CardRow label="Artist" rightValue={metadata.audio.artist} />}
-                {metadata.audio.album && <CardRow label="Album" rightValue={metadata.audio.album} />}
-                {metadata.audio.title && <CardRow label="Title" rightValue={metadata.audio.title} />}
-                {metadata.audio.genre && <CardRow label="Genre" rightValue={metadata.audio.genre} />}
+                {metadata.audio.artist && <CardRow label={t('organize.artist')} rightValue={metadata.audio.artist} />}
+                {metadata.audio.album && <CardRow label={t('organize.album')} rightValue={metadata.audio.album} />}
+                {metadata.audio.title && <CardRow label={t('organize.title')} rightValue={metadata.audio.title} />}
+                {metadata.audio.genre && <CardRow label={t('organize.genre')} rightValue={metadata.audio.genre} />}
               </div>
             </div>
           )}
-          {!metadata.exif && !metadata.audio && <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>No metadata available.</p>}
+          {!metadata.exif && !metadata.audio && <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t('organize.noMetadata')}</p>}
         </Card>
       )}
     </div>

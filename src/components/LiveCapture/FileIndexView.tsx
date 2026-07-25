@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { type IndexedFile, searchFileIndex } from "../../lib/tauri-bridge";
 import { inputCls } from "../ui/input";
@@ -14,6 +15,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function FileIndexView() {
+  const { t } = useTranslation(["capture", "common"]);
   const [query, setQuery] = useState("");
   const [extFilter, setExtFilter] = useState("");
   const [results, setResults] = useState<IndexedFile[]>([]);
@@ -43,7 +45,7 @@ export default function FileIndexView() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search files..."
+            placeholder={t("capture:searchFiles")}
             className={`w-full pl-8 ${inputCls}`}
             style={inputStyle}
           />
@@ -52,7 +54,7 @@ export default function FileIndexView() {
           type="text"
           value={extFilter}
           onChange={(e) => setExtFilter(e.target.value)}
-          placeholder="Extension"
+          placeholder={t("capture:extension")}
           className={`w-24 ${inputCls}`}
           style={inputStyle}
         />
@@ -65,14 +67,14 @@ export default function FileIndexView() {
               <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--text-secondary)" }}>Name</th>
               <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--text-secondary)" }}>Ext</th>
               <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--text-secondary)" }}>Size</th>
-              <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--text-secondary)" }}>Modified</th>
+              <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--text-secondary)" }}>{t("capture:modified")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="px-3 py-4 text-center" style={{ color: "var(--text-tertiary)" }}>Searching...</td></tr>
+              <tr><td colSpan={4} className="px-3 py-4 text-center" style={{ color: "var(--text-tertiary)" }}>{t("common:searching")}</td></tr>
             ) : results.length === 0 ? (
-              <tr><td colSpan={4} className="px-3 py-4 text-center" style={{ color: "var(--text-tertiary)" }}>No results</td></tr>
+              <tr><td colSpan={4} className="px-3 py-4 text-center" style={{ color: "var(--text-tertiary)" }}>{t("common:noResults")}</td></tr>
             ) : (
               results.map((file) => (
                 <tr key={file.id} style={{ borderTop: "1px solid var(--border-default)" }}>

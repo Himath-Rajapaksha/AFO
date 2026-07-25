@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { watchDirectory, unwatchDirectory, listWatchedDirectories, createSchedule, listSchedules, deleteSchedule, toggleSchedule, runScheduleNow, type WatchedDir, type Schedule } from "../../lib/tauri-bridge";
 import { useAppStore } from "../../lib/store";
 import { showToast } from "../Toast";
@@ -8,25 +9,27 @@ import Toggle from "../ui/Toggle";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { resetTutorial } from "../Tutorial";
 
-const SECTIONS = [
-  { id: "general", label: "General" },
-  { id: "notifications", label: "Notifications" },
-  { id: "privacy", label: "Privacy" },
-  { id: "about", label: "About" },
-] as const;
-
-type Section = (typeof SECTIONS)[number]["id"];
+const SECTION_IDS = ["general", "notifications", "privacy", "about"] as const;
+type Section = (typeof SECTION_IDS)[number];
 
 export default function SettingsPanel() {
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState<Section>("general");
+
+  const sections: { id: Section; label: string }[] = [
+    { id: "general", label: t("settings.general") },
+    { id: "notifications", label: t("settings.notifications") },
+    { id: "privacy", label: t("settings.privacy") },
+    { id: "about", label: t("settings.about") },
+  ];
 
   return (
     <div className="flex flex-col gap-5 p-6">
-      <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Settings</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Application settings and configuration.</p></div>
+      <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{t("settings.title")}</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>{t("settings.description")}</p></div>
       <div className="flex gap-6">
         <nav className="w-48 shrink-0 space-y-1">
-          {SECTIONS.map((s) => (
+          {sections.map((s) => (
             <button key={s.id} onClick={() => setActiveSection(s.id)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors"
               style={{ backgroundColor: activeSection === s.id ? "var(--accent-soft)" : "transparent", color: activeSection === s.id ? "var(--accent)" : "var(--text-secondary)" }}>
               {s.label}
@@ -45,6 +48,7 @@ export default function SettingsPanel() {
 }
 
 function GeneralSection() {
+  const { t } = useTranslation();
   const [watchedDirs, setWatchedDirs] = useState<WatchedDir[]>([]);
   const [loadingDirs, setLoadingDirs] = useState(true);
   const [newDir, setNewDir] = useState("");
@@ -57,50 +61,50 @@ function GeneralSection() {
 
   async function handleAddDir() {
     if (!newDir.trim()) return;
-    try { await watchDirectory(newDir.trim()); setNewDir(""); await refreshDirs(); showToast("Started watching directory", "success"); } catch (e) { showToast(`Failed: ${e}`, "error"); }
+    try { await watchDirectory(newDir.trim()); setNewDir(""); await refreshDirs(); showToast(t("app.startedWatching"), "success"); } catch (e) { showToast(`Failed: ${e}`, "error"); }
   }
   async function handleRemoveDir(dir: string) {
-    try { await unwatchDirectory(dir); await refreshDirs(); showToast("Stopped watching", "info"); } catch (e) { showToast(`Failed: ${e}`, "error"); }
+    try { await unwatchDirectory(dir); await refreshDirs(); showToast(t("app.stoppedWatching"), "info"); } catch (e) { showToast(`Failed: ${e}`, "error"); }
   }
   async function handlePickDir() {
-    try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ directory: true, multiple: false }); if (sel && typeof sel === "string") setNewDir(sel); } catch { showToast("Picker not available", "error"); }
+    try { const { open } = await import("@tauri-apps/plugin-dialog"); const sel = await open({ directory: true, multiple: false }); if (sel && typeof sel === "string") setNewDir(sel); } catch { showToast(t("app.pickerNotAvailable"), "error"); }
   }
 
   return (
     <div className="space-y-5">
       {/* Appearance */}
       <Card>
-        <CardHeader>General</CardHeader>
-        <CardRow label="Appearance" description="Switch between light and dark theme" control={
+        <CardHeader>{t("settings.generalTitle")}</CardHeader>
+        <CardRow label={t("settings.appearance")} description={t("settings.appearanceDesc")} control={
           <ThemeToggle />
         } />
-        <CardRow label="Show Tutorial" description="Re-open the getting started guide" control={
-          <Button variant="secondary" onClick={() => { resetTutorial(); setActivePanel("tutorial"); }} className="text-xs">Show</Button>
+        <CardRow label={t("settings.showTutorial")} description={t("settings.showTutorialDesc")} control={
+          <Button variant="secondary" onClick={() => { resetTutorial(); setActivePanel("tutorial"); }} className="text-xs">{t("common.show")}</Button>
         } />
-        <CardRow label="Recursive scan depth" rightValue="5" />
-        <CardRow label="Quarantine auto-delete" rightValue="30 days" />
-        <CardRow label="Watch debounce" rightValue="300ms" />
+        <CardRow label={t("settings.recursiveScanDepth")} rightValue="5" />
+        <CardRow label={t("settings.quarantineAutoDelete")} rightValue="30 days" />
+        <CardRow label={t("settings.watchDebounce")} rightValue="300ms" />
       </Card>
 
       {/* Watched Directories */}
       <Card>
-        <CardHeader>Folder Watching</CardHeader>
-        <CardDescription>Configure directories for real-time file watching.</CardDescription>
+        <CardHeader>{t("settings.folderWatching")}</CardHeader>
+        <CardDescription>{t("settings.folderWatchingDesc")}</CardDescription>
         <div className="flex items-center gap-2 mb-3">
-          <Button variant="secondary" onClick={handlePickDir} className="text-xs">Browse</Button>
-          <input type="text" value={newDir} onChange={(e) => setNewDir(e.target.value)} placeholder="/path/to/directory" onKeyDown={(e) => e.key === "Enter" && handleAddDir()} aria-label="Directory path to watch"
+          <Button variant="secondary" onClick={handlePickDir} className="text-xs">{t("common.browse")}</Button>
+          <input type="text" value={newDir} onChange={(e) => setNewDir(e.target.value)} placeholder="/path/to/directory" onKeyDown={(e) => e.key === "Enter" && handleAddDir()} aria-label={t("aria.directoryPathToWatch")}
             className="flex-1 rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
-          <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>
+          <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">{t("common.add")}</Button>
         </div>
-        {loadingDirs ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Loading...</p> : watchedDirs.length === 0 ? (
-          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>No directories being watched.</p>
+        {loadingDirs ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("common.loading")}</p> : watchedDirs.length === 0 ? (
+          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("settings.noDirectoriesBeingWatched")}</p>
         ) : (
           <div className="space-y-1.5">
             {watchedDirs.map((dir) => (
               <div key={dir.path} className="flex items-center gap-3 rounded-lg px-3 py-2" style={{ backgroundColor: "var(--bg-inset)" }}>
                 <div className="h-2 w-2 rounded-full" style={{ backgroundColor: dir.enabled ? "var(--success)" : "var(--text-tertiary)" }} />
                 <span className="flex-1 truncate text-sm" style={{ color: "var(--text-primary)" }}>{dir.path}</span>
-                <button onClick={() => handleRemoveDir(dir.path)} className="text-xs" style={{ color: "var(--danger)" }}>Remove</button>
+                <button onClick={() => handleRemoveDir(dir.path)} className="text-xs" style={{ color: "var(--danger)" }}>{t("common.remove")}</button>
               </div>
             ))}
           </div>
@@ -114,6 +118,7 @@ function GeneralSection() {
 }
 
 function SchedulesCard() {
+  const { t } = useTranslation();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -127,57 +132,57 @@ function SchedulesCard() {
 
   async function handleCreate() {
     if (!newName.trim() || !newCron.trim() || !newPath.trim()) return;
-    try { await createSchedule(newName.trim(), newCron.trim(), newAction, newPath.trim()); setNewName(""); setNewCron(""); setNewPath(""); setShowCreate(false); await refresh(); showToast("Schedule created", "success"); }
+    try { await createSchedule(newName.trim(), newCron.trim(), newAction, newPath.trim()); setNewName(""); setNewCron(""); setNewPath(""); setShowCreate(false); await refresh(); showToast(t("app.scheduleCreated"), "success"); }
     catch (e) { showToast(`Failed: ${e}`, "error"); }
   }
 
   function getActionLabel(a: Schedule["action"]): string {
-    if (a.OrganizeByExtension) return "Organize by Extension";
-    if (a.OrganizeByDate) return "Organize by Date";
-    if (a.ApplyRules) return "Apply Rules";
-    if (a.ScanDuplicates) return "Scan Duplicates";
+    if (a.OrganizeByExtension) return t("settings.organizeByExtension");
+    if (a.OrganizeByDate) return t("settings.organizeByDate");
+    if (a.ApplyRules) return t("settings.applyRules");
+    if (a.ScanDuplicates) return t("settings.scanDuplicates");
     return "Unknown";
   }
 
   return (
     <Card>
-      <CardHeader>Schedules</CardHeader>
-      <CardDescription>Cron-based automated organization tasks.</CardDescription>
-      {!showCreate && <Button variant="secondary" onClick={() => setShowCreate(true)} aria-expanded="false" className="text-xs mb-3">Create Schedule</Button>}
+      <CardHeader>{t("settings.schedules")}</CardHeader>
+      <CardDescription>{t("settings.schedulesDesc")}</CardDescription>
+      {!showCreate && <Button variant="secondary" onClick={() => setShowCreate(true)} aria-expanded="false" className="text-xs mb-3">{t("settings.createSchedule")}</Button>}
       {showCreate && (
         <div className="mb-3 rounded-lg p-3 space-y-2" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
           <div className="grid grid-cols-2 gap-2">
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" aria-label="Schedule name" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
-            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" aria-label="Cron expression" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" aria-label={t("aria.scheduleName")} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" aria-label={t("aria.cronExpression")} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} aria-label="Schedule action" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
-              <option value="organize_extension">Organize by Extension</option>
-              <option value="organize_date">Organize by Date</option>
-              <option value="apply_rules">Apply Rules</option>
-              <option value="scan_duplicates">Scan Duplicates</option>
+            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} aria-label={t("aria.scheduleAction")} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
+              <option value="organize_extension">{t("settings.organizeByExtension")}</option>
+              <option value="organize_date">{t("settings.organizeByDate")}</option>
+              <option value="apply_rules">{t("settings.applyRules")}</option>
+              <option value="scan_duplicates">{t("settings.scanDuplicates")}</option>
             </select>
-            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" aria-label="Schedule directory path" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" aria-label={t("aria.scheduleDirectoryPath")} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleCreate} disabled={!newName.trim() || !newCron.trim() || !newPath.trim()} className="text-xs">Save</Button>
-            <Button variant="secondary" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
+            <Button onClick={handleCreate} disabled={!newName.trim() || !newCron.trim() || !newPath.trim()} className="text-xs">{t("common.save")}</Button>
+            <Button variant="secondary" onClick={() => setShowCreate(false)} className="text-xs">{t("common.cancel")}</Button>
           </div>
         </div>
       )}
-      {loading ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Loading...</p> : schedules.length === 0 ? (
-        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>No schedules configured.</p>
+      {loading ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("common.loading")}</p> : schedules.length === 0 ? (
+        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("settings.noSchedulesConfigured")}</p>
       ) : (
         <div className="space-y-1.5">
           {schedules.map((s) => (
             <div key={s.id} className="flex items-center gap-3 rounded-lg px-3 py-2" style={{ backgroundColor: "var(--bg-inset)", opacity: s.enabled ? 1 : 0.5 }}>
-              <Toggle checked={s.enabled} onChange={async () => { await toggleSchedule(s.id, !s.enabled); await refresh(); }} size="sm" label={`Enable schedule ${s.name}`} />
+              <Toggle checked={s.enabled} onChange={async () => { await toggleSchedule(s.id, !s.enabled); await refresh(); }} size="sm" label={t("settings.enableSchedule", { name: s.name })} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s.name}</div>
                 <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{s.cron} · {getActionLabel(s.action)}</div>
               </div>
-              <Button variant="secondary" onClick={async () => { await runScheduleNow(s.id); await refresh(); showToast("Executed", "success"); }} className="text-xs px-2 py-1">Run</Button>
-              <button onClick={async () => { await deleteSchedule(s.id); await refresh(); }} className="text-xs" style={{ color: "var(--danger)" }}>Delete</button>
+              <Button variant="secondary" onClick={async () => { await runScheduleNow(s.id); await refresh(); showToast(t("app.executed"), "success"); }} className="text-xs px-2 py-1">{t("common.run")}</Button>
+              <button onClick={async () => { await deleteSchedule(s.id); await refresh(); }} className="text-xs" style={{ color: "var(--danger)" }}>{t("common.delete")}</button>
             </div>
           ))}
         </div>
@@ -187,6 +192,7 @@ function SchedulesCard() {
 }
 
 function NotificationsSection() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<{ operationComplete: boolean; scheduledRun: boolean; errorAlerts: boolean; liveCapture: boolean }>(() => {
     try {
       const saved = localStorage.getItem("afo-notification-settings");
@@ -205,31 +211,35 @@ function NotificationsSection() {
   return (
     <div className="space-y-5">
       <Card>
-        <CardHeader>Notifications</CardHeader>
-        <CardDescription>Configure when and how you receive notifications.</CardDescription>
-        <CardRow label="Operation Complete" description="Toast when organize/rename finishes" control={<Toggle checked={settings.operationComplete} onChange={() => toggle("operationComplete")} label="Operation complete notifications" />} />
-        <CardRow label="Live Capture" description="Toast on file changes in watched directories" control={<Toggle checked={settings.liveCapture} onChange={() => toggle("liveCapture")} label="Live capture notifications" />} />
-        <CardRow label="Scheduled Run" description="Notify on cron job completion" control={<Toggle checked={settings.scheduledRun} onChange={() => toggle("scheduledRun")} label="Scheduled run notifications" />} />
-        <CardRow label="Error Alerts" description="Show errors immediately" control={<Toggle checked={settings.errorAlerts} onChange={() => toggle("errorAlerts")} label="Error alerts" />} />
+        <CardHeader>{t("settings.notificationsTitle")}</CardHeader>
+        <CardDescription>{t("settings.notificationsDesc")}</CardDescription>
+        <CardRow label={t("settings.operationComplete")} description={t("settings.operationCompleteDesc")} control={<Toggle checked={settings.operationComplete} onChange={() => toggle("operationComplete")} label={t("aria.operationCompleteNotifications")} />} />
+        <CardRow label={t("settings.liveCapture")} description={t("settings.liveCaptureDesc")} control={<Toggle checked={settings.liveCapture} onChange={() => toggle("liveCapture")} label={t("aria.liveCaptureNotifications")} />} />
+        <CardRow label={t("settings.scheduledRun")} description={t("settings.scheduledRunDesc")} control={<Toggle checked={settings.scheduledRun} onChange={() => toggle("scheduledRun")} label={t("aria.scheduledRunNotifications")} />} />
+        <CardRow label={t("settings.errorAlerts")} description={t("settings.errorAlertsDesc")} control={<Toggle checked={settings.errorAlerts} onChange={() => toggle("errorAlerts")} label={t("aria.errorAlerts")} />} />
       </Card>
     </div>
   );
 }
 
 function PrivacySection() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-5">
       <Card>
-        <CardHeader>Privacy</CardHeader>
-        <CardDescription>Control data collection and storage.</CardDescription>
-        <CardRow label="Usage Analytics" description="Not yet implemented" control={<Toggle checked={false} onChange={() => {}} disabled label="Usage analytics" />} />
-        <CardRow label="Log to File" description="Write operation logs to disk (always enabled)" control={<Toggle checked={true} onChange={() => {}} disabled label="Log to file" />} />
+        <CardHeader>{t("settings.privacyTitle")}</CardHeader>
+        <CardDescription>{t("settings.privacyDesc")}</CardDescription>
+        <CardRow label={t("settings.usageAnalytics")} description={t("settings.usageAnalyticsDesc")} control={<Toggle checked={false} onChange={() => {}} disabled label={t("aria.usageAnalytics")} />} />
+        <CardRow label={t("settings.logToFile")} description={t("settings.logToFileDesc")} control={<Toggle checked={true} onChange={() => {}} disabled label={t("aria.logToFile")} />} />
       </Card>
     </div>
   );
 }
 
 function AboutSection() {
+  const { t } = useTranslation();
+
   async function openGitHub() {
     try {
       const { open } = await import("@tauri-apps/plugin-shell");
@@ -242,12 +252,12 @@ function AboutSection() {
   return (
     <div className="space-y-5">
       <Card>
-        <CardHeader>About AFO</CardHeader>
-        <CardDescription>Advanced File Organizer</CardDescription>
-        <CardRow label="Version" rightValue="3.1.1" />
-        <CardRow label="Build" rightValue="2026-07-21" />
-        <CardRow label="Engine" rightValue="Tauri v2 + Rust" />
-        <CardRow label="License" rightValue="MIT" />
+        <CardHeader>{t("settings.aboutAFO")}</CardHeader>
+        <CardDescription>{t("settings.advancedFileOrganizer")}</CardDescription>
+        <CardRow label={t("settings.version")} rightValue="3.1.1" />
+        <CardRow label={t("settings.build")} rightValue="2026-07-21" />
+        <CardRow label={t("settings.engine")} rightValue="Tauri v2 + Rust" />
+        <CardRow label={t("settings.license")} rightValue="MIT" />
       </Card>
       <Card>
         <Button variant="secondary" onClick={openGitHub} className="gap-2">
@@ -258,11 +268,11 @@ function AboutSection() {
         </Button>
       </Card>
       <Card>
-        <CardHeader>Data Locations</CardHeader>
+        <CardHeader>{t("settings.dataLocations")}</CardHeader>
         <div className="space-y-1.5 font-mono text-xs" style={{ color: "var(--text-tertiary)" }}>
-          <CardRow label="Config" rightValue="~/.config/afo/" />
-          <CardRow label="Journal" rightValue="~/.local/share/afo/" />
-          <CardRow label="Logs" rightValue="~/.local/share/afo/afo.log" />
+          <CardRow label={t("settings.config")} rightValue="~/.config/afo/" />
+          <CardRow label={t("settings.journal")} rightValue="~/.local/share/afo/" />
+          <CardRow label={t("settings.logs")} rightValue="~/.local/share/afo/afo.log" />
         </div>
       </Card>
     </div>

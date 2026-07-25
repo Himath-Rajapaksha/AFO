@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Trash2, FolderOpen, Sparkles, Upload, Download, AlertTriangle } from "lucide-react";
 import { listRules, saveRules, exportRules, importRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
 // @ts-ignore — save is exported but TS can't resolve it from this package version
@@ -91,9 +92,23 @@ const PRESET_RULES: PresetRule[] = [
   },
 ];
 
+const PRESET_TRANSLATION_KEYS = [
+  { name: "rules.presetOrganizeImages", desc: "rules.presetOrganizeImagesDesc" },
+  { name: "rules.presetOrganizeDocuments", desc: "rules.presetOrganizeDocumentsDesc" },
+  { name: "rules.presetOrganizeVideos", desc: "rules.presetOrganizeVideosDesc" },
+  { name: "rules.presetOrganizeMusic", desc: "rules.presetOrganizeMusicDesc" },
+  { name: "rules.presetArchiveOldFiles", desc: "rules.presetArchiveOldFilesDesc" },
+  { name: "rules.presetSortByDate", desc: "rules.presetSortByDateDesc" },
+  { name: "rules.presetCatchDownloads", desc: "rules.presetCatchDownloadsDesc" },
+  { name: "rules.presetOrganizeScreenshots", desc: "rules.presetOrganizeScreenshotsDesc" },
+  { name: "rules.presetSortLargeFiles", desc: "rules.presetSortLargeFilesDesc" },
+  { name: "rules.presetOrganizeCodeFiles", desc: "rules.presetOrganizeCodeFilesDesc" },
+];
+
 const inputStyle = { backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" };
 
 export default function RuleBuilder() {
+  const { t } = useTranslation();
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -139,7 +154,7 @@ export default function RuleBuilder() {
   }
 
   async function handleExport() {
-    if (rules.length === 0) { setError("No rules to export"); return; }
+    if (rules.length === 0) { setError(t("rules.noRulesToExport")); return; }
     try {
       const json = await exportRules(rules);
       const filePath = await saveDialog({
@@ -226,17 +241,17 @@ export default function RuleBuilder() {
 
   const addedPresetNames = new Set(rules.map((r) => r.name));
 
-  if (loading) return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Rule Builder</h1><p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>Loading rules...</p></div>;
+  if (loading) return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{t("rules.title")}</h1><p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>{t("rules.loadingRules")}</p></div>;
 
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-start justify-between">
-        <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Rule Builder</h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Define conditions and actions to organize files automatically.</p></div>
+        <div><h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{t("rules.title")}</h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>{t("rules.description")}</p></div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={handleExport} className="gap-2"><Upload size={14} /> Export</Button>
-          <Button variant="secondary" onClick={handleImportClick} className="gap-2"><Download size={14} /> Import</Button>
-          <Button onClick={startCreate} className="gap-2"><Plus size={14} /> Create Rule</Button>
+          <Button variant="secondary" onClick={handleExport} className="gap-2"><Upload size={14} /> {t("rules.export")}</Button>
+          <Button variant="secondary" onClick={handleImportClick} className="gap-2"><Download size={14} /> {t("rules.import")}</Button>
+          <Button onClick={startCreate} className="gap-2"><Plus size={14} /> {t("rules.createRule")}</Button>
         </div>
       </div>
 
@@ -247,15 +262,15 @@ export default function RuleBuilder() {
         <Card>
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
-            <CardHeader>Import Conflicts</CardHeader>
+            <CardHeader>{t("rules.importConflicts")}</CardHeader>
           </div>
           <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-            {conflicts.length} rule{conflicts.length > 1 ? "s" : ""} share a name with existing rules. Choose how to handle each:
+            {t("rules.importConflictsDesc", { count: conflicts.length })}
           </p>
           <div className="flex gap-2 mb-4">
-            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("replace")} style={conflictApplyAll === "replace" ? { borderColor: "var(--accent)" } : {}}>Replace All</Button>
-            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("keep_both")} style={conflictApplyAll === "keep_both" ? { borderColor: "var(--accent)" } : {}}>Keep Both All</Button>
-            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("skip")} style={conflictApplyAll === "skip" ? { borderColor: "var(--accent)" } : {}}>Skip All</Button>
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("replace")} style={conflictApplyAll === "replace" ? { borderColor: "var(--accent)" } : {}}>{t("rules.replaceAll")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("keep_both")} style={conflictApplyAll === "keep_both" ? { borderColor: "var(--accent)" } : {}}>{t("rules.keepBothAll")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("skip")} style={conflictApplyAll === "skip" ? { borderColor: "var(--accent)" } : {}}>{t("rules.skipAll")}</Button>
           </div>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {conflicts.map((c, idx) => (
@@ -263,7 +278,7 @@ export default function RuleBuilder() {
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{c.importedRule.name}</div>
                   <div className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                    {c.importedRule.conditions.length} condition{c.importedRule.conditions.length !== 1 ? "s" : ""}, {c.importedRule.actions.length} action{c.importedRule.actions.length !== 1 ? "s" : ""}
+                    {t("rules.conditionsCount", { count: c.importedRule.conditions.length })}, {t("rules.actionsCount", { count: c.importedRule.actions.length })}
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0 ml-3">
@@ -278,7 +293,7 @@ export default function RuleBuilder() {
                         border: `1px solid ${c.action === a ? "var(--accent)" : "var(--border-default)"}`,
                       }}
                     >
-                      {a === "replace" ? "Replace" : a === "keep_both" ? "Keep Both" : "Skip"}
+                      {a === "replace" ? t("rules.replace") : a === "keep_both" ? t("rules.keepBoth") : t("rules.skip")}
                     </button>
                   ))}
                 </div>
@@ -286,28 +301,28 @@ export default function RuleBuilder() {
             ))}
           </div>
           <div className="flex gap-2 mt-4">
-            <Button onClick={confirmImport}>Apply Choices</Button>
-            <Button variant="secondary" onClick={cancelImport}>Cancel Import</Button>
+            <Button onClick={confirmImport}>{t("rules.applyChoices")}</Button>
+            <Button variant="secondary" onClick={cancelImport}>{t("rules.cancelImport")}</Button>
           </div>
         </Card>
       )}
 
       {/* Rule Builder Settings */}
       <Card>
-        <CardHeader>Rule Builder Settings</CardHeader>
-        <CardDescription>Configure how the rule builder behaves.</CardDescription>
-        <CardRow label="Visual Rule Editor" description="Use node-based flow editor" control={<Toggle checked={useVisualEditor} onChange={setUseVisualEditor} />} />
-        <CardRow label="Live Preview" description="Not yet connected to backend" control={<Toggle checked={true} onChange={() => {}} disabled />} />
+        <CardHeader>{t("rules.ruleBuilderSettings")}</CardHeader>
+        <CardDescription>{t("rules.ruleBuilderSettingsDesc")}</CardDescription>
+        <CardRow label={t("rules.visualRuleEditor")} description={t("rules.visualRuleEditorDesc")} control={<Toggle checked={useVisualEditor} onChange={setUseVisualEditor} />} />
+        <CardRow label={t("rules.livePreview")} description={t("rules.livePreviewDesc")} control={<Toggle checked={true} onChange={() => {}} disabled />} />
       </Card>
 
       {/* Preset Rules */}
       <Card>
         <CardHeader>
-          <span className="flex items-center gap-2"><Sparkles size={14} style={{ color: "var(--accent)" }} /> Preset Rules</span>
+          <span className="flex items-center gap-2"><Sparkles size={14} style={{ color: "var(--accent)" }} /> {t("rules.presetRules")}</span>
         </CardHeader>
-        <CardDescription>Quick-start templates for common file organization tasks. Click to add.</CardDescription>
+        <CardDescription>{t("rules.presetRulesDesc")}</CardDescription>
         <div className="grid grid-cols-2 gap-2 mt-2">
-          {PRESET_RULES.map((preset) => {
+          {PRESET_RULES.map((preset, idx) => {
             const added = addedPresetNames.has(preset.name);
             return (
               <button
@@ -323,9 +338,9 @@ export default function RuleBuilder() {
                 }}
               >
                 <span className="text-xs font-medium" style={{ color: added ? "var(--text-tertiary)" : "var(--text-primary)" }}>
-                  {added ? "✓ " : ""}{preset.name}
+                  {added ? "✓ " : ""}{t(PRESET_TRANSLATION_KEYS[idx].name)}
                 </span>
-                <span className="text-[10px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{preset.description}</span>
+                <span className="text-[10px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{t(PRESET_TRANSLATION_KEYS[idx].desc)}</span>
               </button>
             );
           })}
@@ -334,7 +349,7 @@ export default function RuleBuilder() {
 
       {/* Rules List */}
       {rules.length === 0 && !editing ? (
-        <Card><p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>No rules yet. Create one to get started.</p></Card>
+        <Card><p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>{t("rules.noRulesYet")}</p></Card>
       ) : (
         <div className="space-y-2">
           {/* New rule form (above existing rules) */}
@@ -354,24 +369,24 @@ export default function RuleBuilder() {
             ) : (
               <Card>
                 <div className="space-y-3">
-                  <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rule Name</label>
-                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label="Rule name" className={`w-full ${inputCls}`} style={inputStyle} /></div>
-                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Conditions</label>
+                  <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.ruleName")}</label>
+                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label={t("aria.ruleName")} className={`w-full ${inputCls}`} style={inputStyle} /></div>
+                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.conditions")}</label>
                     {formConditions.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 mb-2">
-                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label="Condition field" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
-                          {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f}>{f}</option>)}
+                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label={t("aria.conditionField")} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                          {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f} value={f}>{t(`rules.field${f}`)}</option>)}
                         </select>
-                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label="Condition operator" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
-                          {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o}>{o}</option>)}
+                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label={t("aria.conditionOperator")} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                          {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o} value={o}>{t(`rules.operator${o}`)}</option>)}
                         </select>
-                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label="Condition value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
-                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label="Remove condition" style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label={t("aria.conditionValue")} className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label={t("aria.removeCondition")} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
                       </div>
                     ))}
-                    <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>+ Add Condition</button>
+                    <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addCondition")}</button>
                   </div>
-                  <div className="flex gap-2"><Button onClick={handleSave}>Save Rule</Button><Button variant="secondary" onClick={cancel}>Cancel</Button></div>
+                  <div className="flex gap-2"><Button onClick={handleSave}>{t("common.saveRule")}</Button><Button variant="secondary" onClick={cancel}>{t("common.cancel")}</Button></div>
                 </div>
               </Card>
             )
@@ -393,24 +408,24 @@ export default function RuleBuilder() {
             ) : (
               <Card key={rule.id}>
                 <div className="space-y-3">
-                  <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rule Name</label>
-                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label="Rule name" className={`w-full ${inputCls}`} style={inputStyle} /></div>
-                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Conditions</label>
+                  <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.ruleName")}</label>
+                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label={t("aria.ruleName")} className={`w-full ${inputCls}`} style={inputStyle} /></div>
+                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.conditions")}</label>
                     {formConditions.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 mb-2">
-                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label="Condition field" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
-                          {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f}>{f}</option>)}
+                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label={t("aria.conditionField")} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                          {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f} value={f}>{t(`rules.field${f}`)}</option>)}
                         </select>
-                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label="Condition operator" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
-                          {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o}>{o}</option>)}
+                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label={t("aria.conditionOperator")} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                          {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o} value={o}>{t(`rules.operator${o}`)}</option>)}
                         </select>
-                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label="Condition value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
-                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label="Remove condition" style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label={t("aria.conditionValue")} className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label={t("aria.removeCondition")} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
                       </div>
                     ))}
-                    <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>+ Add Condition</button>
+                    <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addCondition")}</button>
                   </div>
-                  <div className="flex gap-2"><Button onClick={handleSave}>Save Rule</Button><Button variant="secondary" onClick={cancel}>Cancel</Button></div>
+                  <div className="flex gap-2"><Button onClick={handleSave}>{t("common.saveRule")}</Button><Button variant="secondary" onClick={cancel}>{t("common.cancel")}</Button></div>
                 </div>
               </Card>
             )
@@ -419,11 +434,11 @@ export default function RuleBuilder() {
               <div className="flex items-center gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium" style={{ color: rule.enabled ? "var(--text-primary)" : "var(--text-tertiary)" }}>{rule.name}</div>
-                  <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{rule.conditions.length} condition{rule.conditions.length !== 1 ? "s" : ""} · {rule.actions.length} action{rule.actions.length !== 1 ? "s" : ""}</div>
+                  <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{t("rules.conditionsCount", { count: rule.conditions.length })} · {t("rules.actionsCount", { count: rule.actions.length })}</div>
                 </div>
                 <Toggle checked={rule.enabled} onChange={() => toggleRule(rule.id)} size="sm" />
-                <Button variant="secondary" onClick={() => startEdit(rule)} className="text-xs px-3 py-1.5">Edit</Button>
-                <Button variant="danger" onClick={() => deleteRule(rule.id)} className="text-xs px-3 py-1.5 opacity-70 hover:opacity-100">Delete</Button>
+                <Button variant="secondary" onClick={() => startEdit(rule)} className="text-xs px-3 py-1.5">{t("common.edit")}</Button>
+                <Button variant="danger" onClick={() => deleteRule(rule.id)} className="text-xs px-3 py-1.5 opacity-70 hover:opacity-100">{t("common.delete")}</Button>
               </div>
             </Card>
           ))}
@@ -432,8 +447,8 @@ export default function RuleBuilder() {
 
       {/* Test Rules */}
       <Card>
-        <CardHeader>Test Rules</CardHeader>
-        <CardDescription>Enter a directory path to dry-run all rules against.</CardDescription>
+        <CardHeader>{t("rules.testRules")}</CardHeader>
+        <CardDescription>{t("rules.testRulesDesc")}</CardDescription>
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={async () => {
             try {
@@ -441,9 +456,9 @@ export default function RuleBuilder() {
               const sel = await open({ directory: true, multiple: false });
               if (sel && typeof sel === "string") setDryRunPath(sel);
             } catch { /* ignore */ }
-          }} className="gap-2"><FolderOpen size={14} /> Choose Directory</Button>
-          <input type="text" value={dryRunPath} onChange={(e) => setDryRunPath(e.target.value)} placeholder="/path/to/directory" aria-label="Dry run directory path" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
-          <Button variant="secondary" onClick={handleDryRun} disabled={!dryRunPath}>Dry Run</Button>
+          }} className="gap-2"><FolderOpen size={14} /> {t("common.chooseDirectory")}</Button>
+          <input type="text" value={dryRunPath} onChange={(e) => setDryRunPath(e.target.value)} placeholder="/path/to/directory" aria-label={t("aria.dryRunPath")} className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+          <Button variant="secondary" onClick={handleDryRun} disabled={!dryRunPath}>{t("common.dryRun")}</Button>
         </div>
         {dryRunResult && <p className="mt-2 text-xs" style={{ color: "var(--text-secondary)" }}>{dryRunResult}</p>}
       </Card>

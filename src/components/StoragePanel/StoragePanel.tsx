@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { FolderOpen, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { showToast } from "../Toast";
@@ -58,6 +59,7 @@ interface StorageCardProps {
 }
 
 function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSpace: propAvailableSpace, isRemovable, breakdown, loading, onScan, onRemove }: StorageCardProps) {
+  const { t } = useTranslation();
   // Use breakdown's disk space if available (for custom dirs), otherwise use props
   const totalSpace = breakdown?.totalSpace || propTotalSpace;
   const availableSpace = breakdown?.availableSpace || propAvailableSpace;
@@ -86,7 +88,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             {formatCapacity(totalSpace)}
           </div>
           <div className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-            {isRemovable ? "External" : "Storage"}
+            {isRemovable ? t("storage.external") : t("storage.storage")}
           </div>
         </div>
       </div>
@@ -99,8 +101,8 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
           </span>
           <span className="text-xs shrink-0 ml-2" style={{ color: "var(--text-secondary)" }}>
             {breakdown
-              ? `${formatBytes(breakdown.totalScannedBytes)} scanned`
-              : `${formatBytes(availableSpace)} free of ${formatCapacity(totalSpace)}`}
+              ? `${formatBytes(breakdown.totalScannedBytes)} ${t("storage.scanned")}`
+              : `${formatBytes(availableSpace)} ${t("storage.freeOf", { capacity: formatCapacity(totalSpace) })}`}
           </span>
         </div>
 
@@ -132,7 +134,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             </div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                {formatBytes(usedSpace)} used
+                {formatBytes(usedSpace)} {t("storage.used")}
               </span>
               <Button
                 variant="secondary"
@@ -140,7 +142,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
                 disabled={loading}
                 className="text-[10px] px-2 py-0.5 ml-auto"
               >
-                {loading ? "Scanning..." : "Scan"}
+                {loading ? t("common.scanning") : t("common.scan")}
               </Button>
               {onRemove && (
                 <button
@@ -149,7 +151,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
                   style={{ color: "var(--text-tertiary)" }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
                   onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
-                  title="Remove"
+                  title={t("storage.remove")}
                 >
                   <Trash2 size={12} />
                 </button>
@@ -165,6 +167,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
 // ── Main Panel ──────────────────────────────────────────────────────
 
 export default function StoragePanel() {
+  const { t } = useTranslation();
   const [disks, setDisks] = useState<DiskInfo[]>([]);
   const [customDirs, setCustomDirs] = useState<string[]>([]);
   const [breakdowns, setBreakdowns] = useState<Record<string, StorageBreakdownResult>>({});
@@ -182,7 +185,7 @@ export default function StoragePanel() {
       const diskList = await getSystemDisks();
       setDisks(diskList);
     } catch (e) {
-      showToast(`Failed to load disks: ${e}`, "error");
+      showToast(t("app.failedToLoadDisks", { error: e }), "error");
     } finally {
       setLoadingDisks(false);
     }
@@ -204,12 +207,12 @@ export default function StoragePanel() {
     const dir = newDir.trim();
     if (!dir) return;
     if (customDirs.includes(dir)) {
-      showToast("Directory already added", "info");
+      showToast(t("app.directoryAlreadyAdded"), "info");
       return;
     }
     saveCustomDirs([...customDirs, dir]);
     setNewDir("");
-    showToast(`Added: ${dir}`, "success");
+    showToast(t("app.added", { dir }), "success");
   }
 
   async function handlePickDir() {
@@ -220,7 +223,7 @@ export default function StoragePanel() {
         setNewDir(selected);
       }
     } catch (e) {
-      showToast(`Directory picker failed: ${e}`, "error");
+      showToast(t("app.directoryPickerFailed", { error: e }), "error");
     }
   }
 
@@ -232,7 +235,7 @@ export default function StoragePanel() {
       delete next[dir];
       return next;
     });
-    showToast(`Removed: ${dir}`, "info");
+    showToast(t("app.removed", { dir }), "info");
   }
 
   async function handleScan(dir: string) {
@@ -243,7 +246,7 @@ export default function StoragePanel() {
       });
       setBreakdowns((prev) => ({ ...prev, [dir]: data }));
     } catch (e) {
-      showToast(`Scan failed: ${e}`, "error");
+      showToast(t("app.scanFailed", { error: e }), "error");
     } finally {
       setLoading((prev) => ({ ...prev, [dir]: false }));
     }
@@ -253,20 +256,20 @@ export default function StoragePanel() {
     <div className="flex flex-col gap-5 p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-          Storage
+          {t("storage.title")}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          See what's using space on your drives.
+          {t("storage.description")}
         </p>
       </div>
 
       {/* Source input */}
       <Card>
-        <CardHeader>Source</CardHeader>
-        <CardDescription>Add a custom directory to analyze.</CardDescription>
+        <CardHeader>{t("storage.source")}</CardHeader>
+        <CardDescription>{t("storage.sourceDesc")}</CardDescription>
         <div className="flex items-center gap-2 mt-2">
           <Button variant="secondary" onClick={handlePickDir} className="gap-1 text-xs">
-            <FolderOpen size={12} /> Choose Directory
+            <FolderOpen size={12} /> {t("storage.chooseDirectory")}
           </Button>
           <input
             type="text"
@@ -277,7 +280,7 @@ export default function StoragePanel() {
             className="flex-1 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
           />
-          <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>
+          <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">{t("storage.add")}</Button>
         </div>
       </Card>
 
@@ -285,13 +288,13 @@ export default function StoragePanel() {
       {loadingDisks ? (
         <Card>
           <p className="text-sm text-center py-4" style={{ color: "var(--text-tertiary)" }}>
-            Loading disks...
+            {t("storage.loadingDisks")}
           </p>
         </Card>
       ) : disks.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
-            System Drives
+            {t("storage.systemDrives")}
           </h3>
           {disks.map((disk) => (
             <StorageCard
@@ -313,7 +316,7 @@ export default function StoragePanel() {
       {customDirs.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
-            Custom Directories
+            {t("storage.customDirectories")}
           </h3>
           {customDirs.map((dir) => (
             <StorageCard

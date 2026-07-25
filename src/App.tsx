@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { useTranslation } from "react-i18next";
 import { useAppStore } from "./lib/store";
 import { ThemeProvider } from "./lib/ThemeProvider";
 import Sidebar from "./components/Sidebar";
@@ -42,6 +43,7 @@ function ActivePanel() {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const setActivePanel = useAppStore((s) => s.setActivePanel);
   const setDroppedPaths = useAppStore((s) => s.setDroppedPaths);
 
@@ -80,9 +82,9 @@ export default function App() {
         const filename = source.split(/[\\/]/).pop() || source;
         if (type === "move" && destination) {
           const destName = destination.split(/[\\/]/).pop() || destination;
-          showToast(`Moved "${filename}" → "${destName}"${rule ? ` by rule "${rule}"` : ""}`, "success");
+          showToast(rule ? t('app.movedToWithRule', { filename, destName, rule }) : t('app.movedTo', { filename, destName }), "success");
         } else {
-          showToast(`${type}: ${filename}`, "info");
+          showToast(t('app.eventType', { type, filename }), "info");
         }
       },
     );
@@ -95,9 +97,9 @@ export default function App() {
         if (!isLiveCaptureEnabled()) return;
         const { filename, change_type } = event.payload;
         const name = filename || event.payload.source.split(/[\\/]/).pop() || event.payload.source;
-        const label = change_type === "pending" ? "Pending approval" :
-                      change_type === "captured" ? "Captured" :
-                      change_type === "auto_organize" ? "Auto-organized" : "File change";
+        const label = change_type === "pending" ? t('app.pendingApproval') :
+                      change_type === "captured" ? t('app.captured') :
+                      change_type === "auto_organize" ? t('app.autoOrganized') : t('app.fileChange');
         showToast(`${label}: "${name}"`, "info");
       },
     );
