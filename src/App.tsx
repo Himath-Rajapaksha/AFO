@@ -110,7 +110,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <div className="flex h-screen w-screen overflow-hidden" style={{ background: "var(--bg-app)", color: "var(--text-primary)" }}>
+      <div className="flex h-screen w-screen overflow-hidden bg-bg text-text">
         <Sidebar />
         <main className="min-w-0 flex-1 overflow-y-auto">
           <ActivePanel />

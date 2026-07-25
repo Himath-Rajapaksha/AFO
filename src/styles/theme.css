@@ -1,149 +1,173 @@
-/* ── Native Design System — CSS Custom Properties ─────────────────────── */
+/**
+ * AFO — design tokens
+ * Drop this into src/styles/theme.css and import it once in src/index.css
+ * (e.g. `@import './styles/theme.css';` before the Tailwind directives).
+ *
+ * Theming strategy: class-based dark mode (`<html class="dark">`),
+ * matching tailwind.config.js -> darkMode: 'class'.
+ * Every token below is consumed via Tailwind's arbitrary-value/var()
+ * support, e.g. `bg-[var(--color-bg)]` or through the tailwind.config
+ * extension in tailwind.tokens.js.
+ */
 
-/* Light theme (default) */
-:root,
-[data-theme="light"] {
-  /* Surface layers */
-  --bg-app: #f5f5f7;
-  --bg-sidebar: #e8e8ed;
-  --bg-card: #ffffff;
-  --bg-card-hover: #fafafa;
-  --bg-inset: #f0f0f2;
-  --bg-elevated: #ffffff;
+:root {
+  /* surfaces */
+  --color-bg: #F5F5F7;
+  --color-sidebar: #EBEBEE;
+  --color-card: #FFFFFF;
+  --color-border: #E3E3E6;
+  --color-border-strong: #D4D4D8;
 
-  /* Borders */
-  --border-default: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  --border-focus: #0071E3;
+  /* text */
+  --color-text: #1D1D1F;
+  --color-text-dim: #6E6E73;
+  --color-text-faint: #A1A1A6;
 
-  /* Text */
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-tertiary: #aeaeb2;
-  --text-inverse: #ffffff;
+  /* accent */
+  --color-accent: #0071E3;
+  --color-accent-soft: #E8F1FD;
+  --color-accent-contrast: #FFFFFF;
 
-  /* Accent */
-  --accent: #0071E3;
-  --accent-hover: #005BB5;
-  --accent-soft: rgba(0, 113, 227, 0.08);
+  /* semantic */
+  --color-success: #30D158;
+  --color-danger: #FF3B30;
+  --color-warning: #FF9F0A;
 
-  /* Semantic */
-  --success: #34c759;
-  --warning: #ff9500;
-  --danger: #ff3b30;
-  --info: #5ac8fa;
+  /* elevation */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.16);
 
-  /* Toggle */
-  --toggle-off-bg: #e5e5ea;
-  --toggle-off-knob: #ffffff;
-  --toggle-on-bg: #34c759;
-  --toggle-on-knob: #ffffff;
-
-  /* Segmented control */
-  --segment-bg: rgba(0, 0, 0, 0.04);
-  --segment-active-bg: #ffffff;
-  --segment-active-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-
-  /* Icon tile backgrounds */
-  --icon-organize: rgba(0, 113, 227, 0.1);
-  --icon-organize-fg: #0071E3;
-  --icon-rules: rgba(175, 82, 222, 0.1);
-  --icon-rules-fg: #af52de;
-  --icon-duplicates: rgba(255, 149, 0, 0.1);
-  --icon-duplicates-fg: #ff9500;
-  --icon-history: rgba(52, 199, 89, 0.1);
-  --icon-history-fg: #34c759;
-  --icon-settings: rgba(142, 142, 147, 0.1);
-  --icon-settings-fg: #8e8e93;
-  --icon-tutorial: rgba(0, 113, 227, 0.1);
-  --icon-tutorial-fg: #0071E3;
-  --icon-capture: rgba(255, 59, 48, 0.1);
-  --icon-capture-fg: #ff3b30;
-  --icon-storage: rgba(88, 86, 214, 0.1);
-  --icon-storage-fg: #5856d6;
-
-  /* Storage breakdown category colors */
-  --cat-images: #ff3b30;
-  --cat-documents: #0071E3;
-  --cat-audio: #af52de;
-  --cat-video: #ff9500;
-  --cat-archives: #34c759;
-  --cat-code: #5856d6;
-  --cat-other: #d1d1d6;
-
-  color-scheme: light;
+  /* sidebar icon tile colors — one per section, used at low opacity as the tile bg */
+  --icon-organize: #0A84FF;
+  --icon-rules: #AF52DE;
+  --icon-duplicates: #FF9F0A;
+  --icon-history: #8E8E93;
+  --icon-settings: #636366;
 }
 
-/* Dark theme */
-[data-theme="dark"] {
-  --bg-app: #1c1c1e;
-  --bg-sidebar: #2c2c2e;
-  --bg-card: #2c2c2e;
-  --bg-card-hover: #3a3a3c;
-  --bg-inset: #1c1c1e;
-  --bg-elevated: #3a3a3c;
+.dark {
+  --color-bg: #000000;
+  --color-sidebar: #121214;
+  --color-card: #1C1C1E;
+  --color-border: #2C2C2E;
+  --color-border-strong: #3A3A3C;
 
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --border-focus: #409cff;
+  --color-text: #F5F5F7;
+  --color-text-dim: #98989D;
+  --color-text-faint: #6E6E73;
 
-  --text-primary: #f5f5f7;
-  --text-secondary: #98989d;
-  --text-tertiary: #636366;
-  --text-inverse: #1d1d1f;
+  --color-accent: #0A84FF;
+  --color-accent-soft: #0A2A4A;
+  --color-accent-contrast: #FFFFFF;
 
-  --accent: #409cff;
-  --accent-hover: #66b3ff;
-  --accent-soft: rgba(64, 156, 255, 0.12);
+  --color-success: #32D74B;
+  --color-danger: #FF453A;
+  --color-warning: #FF9F0A;
 
-  --success: #30d158;
-  --warning: #ff9f0a;
-  --danger: #ff453a;
-  --info: #64d2ff;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55);
 
-  --toggle-off-bg: #39393d;
-  --toggle-off-knob: #ffffff;
-  --toggle-on-bg: #30d158;
-  --toggle-on-knob: #ffffff;
+  --icon-organize: #409CFF;
+  --icon-rules: #BF5AF2;
+  --icon-duplicates: #FFA426;
+  --icon-history: #98989D;
+  --icon-settings: #8E8E93;
+}
 
-  --segment-bg: rgba(255, 255, 255, 0.06);
-  --segment-active-bg: #3a3a3c;
-  --segment-active-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+/* Storage breakdown category colors — shared between the sidebar
+   category legend and the Storage panel's segmented bar. Kept in the
+   same light/dark token pattern as everything else. */
+:root {
+  --cat-images: #FF453A;
+  --cat-documents: #0A84FF;
+  --cat-audio: #BF5AF2;
+  --cat-video: #FF9F0A;
+  --cat-archives: #34C759;
+  --cat-code: #5E5CE6;
+  --cat-other: #D1D1D6;
+}
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+.dark {
+  --cat-images: #FF6961;
+  --cat-documents: #409CFF;
+  --cat-audio: #CF7BFF;
+  --cat-video: #FFB340;
+  --cat-archives: #4FD971;
+  --cat-code: #7A79F0;
+  --cat-other: #48484A;
+}
 
-  --icon-organize: rgba(64, 156, 255, 0.15);
-  --icon-organize-fg: #409cff;
-  --icon-rules: rgba(191, 90, 242, 0.15);
-  --icon-rules-fg: #bf5af2;
-  --icon-duplicates: rgba(255, 159, 10, 0.15);
-  --icon-duplicates-fg: #ff9f0a;
-  --icon-history: rgba(48, 209, 88, 0.15);
-  --icon-history-fg: #30d158;
-  --icon-settings: rgba(142, 142, 147, 0.15);
-  --icon-settings-fg: #8e8e93;
-  --icon-tutorial: rgba(64, 156, 255, 0.15);
-  --icon-tutorial-fg: #409cff;
-  --icon-capture: rgba(255, 69, 58, 0.15);
-  --icon-capture-fg: #ff453a;
-  --icon-storage: rgba(122, 121, 240, 0.15);
-  --icon-storage-fg: #7a79f0;
+/* ── Backward-compatible aliases ──
+   Existing panels use these names via inline style={}.
+   Map them to the canonical --color-* tokens above. */
+:root {
+  --bg-app: var(--color-bg);
+  --bg-sidebar: var(--color-sidebar);
+  --bg-card: var(--color-card);
+  --bg-card-hover: var(--color-card);
+  --bg-inset: var(--color-bg);
+  --bg-elevated: var(--color-card);
 
-  /* Storage breakdown category colors */
-  --cat-images: #ff6961;
-  --cat-documents: #409cff;
-  --cat-audio: #cf7bff;
-  --cat-video: #ffb340;
-  --cat-archives: #4fd971;
-  --cat-code: #7a79f0;
-  --cat-other: #48484a;
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-dim);
+  --text-tertiary: var(--color-text-faint);
+  --text-inverse: var(--color-accent-contrast);
 
-  color-scheme: dark;
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent);
+  --accent-soft: var(--color-accent-soft);
+
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --info: var(--color-accent);
+
+  --border-default: var(--color-border);
+  --border-strong: var(--color-border-strong);
+  --border-focus: var(--color-accent);
+
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-popover);
+  --shadow-lg: var(--shadow-popover);
+
+  /* Toggle tokens */
+  --toggle-on-bg: var(--color-success);
+  --toggle-off-bg: var(--color-border-strong);
+  --toggle-on-knob: #FFFFFF;
+
+  /* Sidebar icon tile foreground */
+  --icon-organize-fg: #FFFFFF;
+  --icon-rules-fg: #FFFFFF;
+  --icon-duplicates-fg: #FFFFFF;
+  --icon-history-fg: #FFFFFF;
+  --icon-settings-fg: #FFFFFF;
+  --icon-capture: var(--color-danger);
+  --icon-capture-fg: #FFFFFF;
+  --icon-storage: var(--color-success);
+  --icon-storage-fg: #FFFFFF;
+  --icon-tutorial: var(--color-accent);
+  --icon-tutorial-fg: #FFFFFF;
+
+  /* Hover button gradient */
+  --circle-start: #a0d9f8;
+  --circle-end: #3a5bbf;
+}
+
+.dark {
+  --toggle-on-knob: #FFFFFF;
+  --icon-organize-fg: #FFFFFF;
+  --icon-rules-fg: #FFFFFF;
+  --icon-duplicates-fg: #FFFFFF;
+  --icon-history-fg: #FFFFFF;
+  --icon-settings-fg: #FFFFFF;
+  --icon-capture: #FF453A;
+  --icon-capture-fg: #FFFFFF;
+  --icon-storage: #32D74B;
+  --icon-storage-fg: #FFFFFF;
+  --icon-tutorial: #0A84FF;
+  --icon-tutorial-fg: #FFFFFF;
+
+  /* Hover button gradient */
+  --circle-start: #1a3a5c;
+  --circle-end: #2a4a7a;
 }
