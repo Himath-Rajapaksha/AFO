@@ -7,7 +7,7 @@ interface StepIndicatorProps {
 
 export default function StepIndicator({ current, total }: StepIndicatorProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" role="presentation" aria-hidden="true">
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}

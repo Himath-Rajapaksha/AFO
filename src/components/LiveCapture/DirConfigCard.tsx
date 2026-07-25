@@ -103,6 +103,7 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
             key={m.value}
             role="tab"
             aria-selected={config.capture_mode === m.value}
+            aria-pressed={config.capture_mode === m.value}
             onClick={() => handleModeChange(m.value)}
             className="flex-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
             style={{
