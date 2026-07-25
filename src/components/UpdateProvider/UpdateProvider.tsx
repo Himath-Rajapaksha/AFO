@@ -39,6 +39,15 @@ export default function UpdateProvider() {
     return () => clearInterval(interval);
   }, [checkForUpdates]);
 
+  useEffect(() => {
+    if (dismissed || !updateInfo) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") handleDismiss();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dismissed, updateInfo]);
+
   async function handleDownload() {
     if (!updateInfo) return;
     setDownloading(true);
@@ -73,6 +82,7 @@ export default function UpdateProvider() {
 
   return (
     <div
+      role="alert"
       className="fixed bottom-4 right-4 z-50 rounded-xl p-4 shadow-lg"
       style={{
         backgroundColor: "var(--bg-card)",
@@ -94,7 +104,7 @@ export default function UpdateProvider() {
             </p>
           </div>
         </div>
-        <button onClick={handleDismiss} style={{ color: "var(--text-tertiary)" }}>
+        <button onClick={handleDismiss} aria-label="Dismiss update notification" style={{ color: "var(--text-tertiary)" }}>
           <X size={14} />
         </button>
       </div>

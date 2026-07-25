@@ -6,7 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({ variant = 'primary', className = '', ...props }: ButtonProps) {
-  const base = 'rounded-pill px-4 py-2 text-[12.5px] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  const base = 'rounded-pill px-4 py-2 text-[12.5px] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
   const variants: Record<string, string> = {
     primary: 'bg-accent text-accent-contrast hover:brightness-110',
     secondary: 'bg-bg text-text border border-border hover:border-border-strong',

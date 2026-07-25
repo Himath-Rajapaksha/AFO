@@ -355,18 +355,18 @@ export default function RuleBuilder() {
               <Card>
                 <div className="space-y-3">
                   <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rule Name</label>
-                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" className={`w-full ${inputCls}`} style={inputStyle} /></div>
+                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label="Rule name" className={`w-full ${inputCls}`} style={inputStyle} /></div>
                   <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Conditions</label>
                     {formConditions.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 mb-2">
-                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label="Condition field" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
                           {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f}>{f}</option>)}
                         </select>
-                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label="Condition operator" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
                           {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o}>{o}</option>)}
                         </select>
-                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
-                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label="Condition value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label="Remove condition" style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
                       </div>
                     ))}
                     <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>+ Add Condition</button>
@@ -394,18 +394,18 @@ export default function RuleBuilder() {
               <Card key={rule.id}>
                 <div className="space-y-3">
                   <div><label className="mb-1 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rule Name</label>
-                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" className={`w-full ${inputCls}`} style={inputStyle} /></div>
+                    <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Organize images" aria-label="Rule name" className={`w-full ${inputCls}`} style={inputStyle} /></div>
                   <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Conditions</label>
                     {formConditions.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 mb-2">
-                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                        <select value={c.field} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, field: e.target.value as RuleCondition["field"] } : x))} aria-label="Condition field" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
                           {["Extension", "Name", "Size", "DateCreated", "DateModified"].map((f) => <option key={f}>{f}</option>)}
                         </select>
-                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
+                        <select value={c.operator} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, operator: e.target.value as RuleCondition["operator"] } : x))} aria-label="Condition operator" className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}>
                           {["Equals", "Contains", "StartsWith", "EndsWith", "GreaterThan", "LessThan", "Regex"].map((o) => <option key={o}>{o}</option>)}
                         </select>
-                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
-                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                        <input type="text" value={c.value} onChange={(e) => setFormConditions((prev) => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} placeholder="value" aria-label="Condition value" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+                        {formConditions.length > 1 && <button onClick={() => setFormConditions((prev) => prev.filter((_, j) => j !== i))} aria-label="Remove condition" style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
                       </div>
                     ))}
                     <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>+ Add Condition</button>
@@ -442,7 +442,7 @@ export default function RuleBuilder() {
               if (sel && typeof sel === "string") setDryRunPath(sel);
             } catch { /* ignore */ }
           }} className="gap-2"><FolderOpen size={14} /> Choose Directory</Button>
-          <input type="text" value={dryRunPath} onChange={(e) => setDryRunPath(e.target.value)} placeholder="/path/to/directory" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
+          <input type="text" value={dryRunPath} onChange={(e) => setDryRunPath(e.target.value)} placeholder="/path/to/directory" aria-label="Dry run directory path" className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle} />
           <Button variant="secondary" onClick={handleDryRun} disabled={!dryRunPath}>Dry Run</Button>
         </div>
         {dryRunResult && <p className="mt-2 text-xs" style={{ color: "var(--text-secondary)" }}>{dryRunResult}</p>}

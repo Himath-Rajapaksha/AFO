@@ -76,6 +76,7 @@ export default function Sidebar() {
             <button
               key={item.id}
               onClick={() => setActivePanel(item.id)}
+              aria-current={active ? "page" : undefined}
               title={collapsed ? item.label : undefined}
               className={`group relative flex w-full items-center rounded-lg text-left text-sm transition-colors ${
                 collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"

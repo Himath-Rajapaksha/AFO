@@ -140,7 +140,7 @@ export default function OrganizePanel() {
         {mode === "rename" && (
           <div className="mt-3 space-y-2">
             <CardRow label="Rename Pattern" description='Use {name}, {ext}, {counter}' control={
-              <input type="text" value={renamePattern} onChange={(e) => setRenamePattern(e.target.value)} placeholder="{name}_{counter}.{ext}"
+              <input type="text" value={renamePattern} onChange={(e) => setRenamePattern(e.target.value)} placeholder="{name}_{counter}.{ext}" aria-label="Rename pattern"
                 className="w-48 rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
             } />
           </div>

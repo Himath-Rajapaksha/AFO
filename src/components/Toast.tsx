@@ -52,6 +52,7 @@ export default function ToastContainer() {
           return (
             <motion.div
               key={toast.id}
+              role="alert"
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -81,6 +82,7 @@ export default function ToastContainer() {
               )}
               <button
                 onClick={() => removeToast(toast.id)}
+                aria-label="Dismiss notification"
                 className="shrink-0 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
               >

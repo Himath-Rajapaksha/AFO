@@ -77,7 +77,7 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
       <div className="flex items-center gap-3">
-        <Toggle checked={config.enabled} onChange={handleToggle} size="sm" />
+        <Toggle checked={config.enabled} onChange={handleToggle} size="sm" label={`Enable ${config.path}`} />
         <span className="flex-1 text-sm font-medium truncate" style={{ color: config.enabled ? "var(--text-primary)" : "var(--text-tertiary)" }} title={config.path}>
           {config.path}
         </span>
@@ -86,21 +86,23 @@ export default function DirConfigCard({ config, stats, onRemoved }: Props) {
         </Button>
         <button
           onClick={handleRemove}
+          aria-label="Remove directory"
           className="flex items-center justify-center rounded-lg p-1.5 transition-colors"
           style={{ color: "var(--text-tertiary)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
-          title="Remove directory"
         >
           <Trash2 size={14} />
         </button>
       </div>
 
       {/* Mode selector */}
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5" role="tablist" aria-label="Capture mode">
         {MODES.map((m) => (
           <button
             key={m.value}
+            role="tab"
+            aria-selected={config.capture_mode === m.value}
             onClick={() => handleModeChange(m.value)}
             className="flex-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
             style={{

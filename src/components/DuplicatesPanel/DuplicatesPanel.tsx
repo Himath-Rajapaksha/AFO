@@ -78,8 +78,8 @@ export default function DuplicatesPanel() {
       <Card>
         <CardHeader>Detection Settings</CardHeader>
         <CardDescription>Configure how duplicates are detected.</CardDescription>
-        <CardRow label="Recursive" description="Scan subdirectories" control={<Toggle checked={recursive} onChange={setRecursive} />} />
-        {recursive && <CardRow label="Max Depth" control={<input type="number" min={1} max={20} value={maxDepth} onChange={(e) => setMaxDepth(Number(e.target.value) || 5)} className="w-16 rounded-lg px-2 py-1 text-sm text-center" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />} />}
+        <CardRow label="Recursive" description="Scan subdirectories" control={<Toggle checked={recursive} onChange={setRecursive} label="Recursive scan" />} />
+        {recursive && <CardRow label="Max Depth" control={<input type="number" min={1} max={20} value={maxDepth} onChange={(e) => setMaxDepth(Number(e.target.value) || 5)} aria-label="Max scan depth" className="w-16 rounded-lg px-2 py-1 text-sm text-center" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />} />}
         <CardRow label="Hash Algorithm" rightValue="BLAKE3" />
       </Card>
 
@@ -116,7 +116,7 @@ export default function DuplicatesPanel() {
         return (
           <Card key={gi}>
             <div className="flex items-center gap-4">
-              <button onClick={() => toggleExpand(gi)} className="shrink-0 transition-transform" style={{ color: "var(--text-tertiary)", transform: isExpanded ? "rotate(90deg)" : "" }}>
+              <button onClick={() => toggleExpand(gi)} aria-label={isExpanded ? "Collapse group" : "Expand group"} aria-expanded={isExpanded} className="shrink-0 transition-transform" style={{ color: "var(--text-tertiary)", transform: isExpanded ? "rotate(90deg)" : "" }}>
                 <ChevronRight size={14} />
               </button>
               <div className="min-w-0 flex-1">

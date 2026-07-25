@@ -124,8 +124,8 @@ export default function HistoryPanel() {
       {/* History Settings */}
       <Card>
         <CardHeader>History Settings</CardHeader>
-        <CardRow label="Enable Undo/Redo" description="Show undo/redo controls (journal always records)" control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} />} />
-        <CardRow label="Keep Full History" description="Store all operations (always on)" control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled />} />
+        <CardRow label="Enable Undo/Redo" description="Show undo/redo controls (journal always records)" control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} label="Enable undo/redo" />} />
+        <CardRow label="Keep Full History" description="Store all operations (always on)" control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled label="Keep full history" />} />
       </Card>
 
       {/* Search & Filters */}

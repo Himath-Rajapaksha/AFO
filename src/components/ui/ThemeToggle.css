@@ -24,6 +24,12 @@
   position: absolute;
 }
 
+/* Focus ring on the label when the hidden input is focused */
+.theme-switch input:focus-visible + .theme-slider {
+  outline: 2px solid var(--accent, #007AFF);
+  outline-offset: 2px;
+}
+
 /* ── Slider (the track) ──────────────────────────────────────────── */
 .theme-slider {
   position: absolute;

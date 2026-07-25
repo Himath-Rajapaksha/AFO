@@ -88,7 +88,7 @@ function GeneralSection() {
         <CardDescription>Configure directories for real-time file watching.</CardDescription>
         <div className="flex items-center gap-2 mb-3">
           <Button variant="secondary" onClick={handlePickDir} className="text-xs">Browse</Button>
-          <input type="text" value={newDir} onChange={(e) => setNewDir(e.target.value)} placeholder="/path/to/directory" onKeyDown={(e) => e.key === "Enter" && handleAddDir()}
+          <input type="text" value={newDir} onChange={(e) => setNewDir(e.target.value)} placeholder="/path/to/directory" onKeyDown={(e) => e.key === "Enter" && handleAddDir()} aria-label="Directory path to watch"
             className="flex-1 rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           <Button onClick={handleAddDir} disabled={!newDir.trim()} className="text-xs">Add</Button>
         </div>
@@ -143,21 +143,21 @@ function SchedulesCard() {
     <Card>
       <CardHeader>Schedules</CardHeader>
       <CardDescription>Cron-based automated organization tasks.</CardDescription>
-      {!showCreate && <Button variant="secondary" onClick={() => setShowCreate(true)} className="text-xs mb-3">Create Schedule</Button>}
+      {!showCreate && <Button variant="secondary" onClick={() => setShowCreate(true)} aria-expanded="false" className="text-xs mb-3">Create Schedule</Button>}
       {showCreate && (
         <div className="mb-3 rounded-lg p-3 space-y-2" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
           <div className="grid grid-cols-2 gap-2">
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
-            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Name" aria-label="Schedule name" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newCron} onChange={(e) => setNewCron(e.target.value)} placeholder="Cron (0 9 * * *)" aria-label="Cron expression" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
+            <select value={newAction} onChange={(e) => setNewAction(e.target.value)} aria-label="Schedule action" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
               <option value="organize_extension">Organize by Extension</option>
               <option value="organize_date">Organize by Date</option>
               <option value="apply_rules">Apply Rules</option>
               <option value="scan_duplicates">Scan Duplicates</option>
             </select>
-            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input type="text" value={newPath} onChange={(e) => setNewPath(e.target.value)} placeholder="/path/to/dir" aria-label="Schedule directory path" className="rounded-lg px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
           </div>
           <div className="flex gap-2">
             <Button onClick={handleCreate} disabled={!newName.trim() || !newCron.trim() || !newPath.trim()} className="text-xs">Save</Button>
@@ -171,7 +171,7 @@ function SchedulesCard() {
         <div className="space-y-1.5">
           {schedules.map((s) => (
             <div key={s.id} className="flex items-center gap-3 rounded-lg px-3 py-2" style={{ backgroundColor: "var(--bg-inset)", opacity: s.enabled ? 1 : 0.5 }}>
-              <Toggle checked={s.enabled} onChange={async () => { await toggleSchedule(s.id, !s.enabled); await refresh(); }} size="sm" />
+              <Toggle checked={s.enabled} onChange={async () => { await toggleSchedule(s.id, !s.enabled); await refresh(); }} size="sm" label={`Enable schedule ${s.name}`} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s.name}</div>
                 <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>{s.cron} · {getActionLabel(s.action)}</div>
@@ -207,10 +207,10 @@ function NotificationsSection() {
       <Card>
         <CardHeader>Notifications</CardHeader>
         <CardDescription>Configure when and how you receive notifications.</CardDescription>
-        <CardRow label="Operation Complete" description="Toast when organize/rename finishes" control={<Toggle checked={settings.operationComplete} onChange={() => toggle("operationComplete")} />} />
-        <CardRow label="Live Capture" description="Toast on file changes in watched directories" control={<Toggle checked={settings.liveCapture} onChange={() => toggle("liveCapture")} />} />
-        <CardRow label="Scheduled Run" description="Notify on cron job completion" control={<Toggle checked={settings.scheduledRun} onChange={() => toggle("scheduledRun")} />} />
-        <CardRow label="Error Alerts" description="Show errors immediately" control={<Toggle checked={settings.errorAlerts} onChange={() => toggle("errorAlerts")} />} />
+        <CardRow label="Operation Complete" description="Toast when organize/rename finishes" control={<Toggle checked={settings.operationComplete} onChange={() => toggle("operationComplete")} label="Operation complete notifications" />} />
+        <CardRow label="Live Capture" description="Toast on file changes in watched directories" control={<Toggle checked={settings.liveCapture} onChange={() => toggle("liveCapture")} label="Live capture notifications" />} />
+        <CardRow label="Scheduled Run" description="Notify on cron job completion" control={<Toggle checked={settings.scheduledRun} onChange={() => toggle("scheduledRun")} label="Scheduled run notifications" />} />
+        <CardRow label="Error Alerts" description="Show errors immediately" control={<Toggle checked={settings.errorAlerts} onChange={() => toggle("errorAlerts")} label="Error alerts" />} />
       </Card>
     </div>
   );
@@ -222,8 +222,8 @@ function PrivacySection() {
       <Card>
         <CardHeader>Privacy</CardHeader>
         <CardDescription>Control data collection and storage.</CardDescription>
-        <CardRow label="Usage Analytics" description="Not yet implemented" control={<Toggle checked={false} onChange={() => {}} disabled />} />
-        <CardRow label="Log to File" description="Write operation logs to disk (always enabled)" control={<Toggle checked={true} onChange={() => {}} disabled />} />
+        <CardRow label="Usage Analytics" description="Not yet implemented" control={<Toggle checked={false} onChange={() => {}} disabled label="Usage analytics" />} />
+        <CardRow label="Log to File" description="Write operation logs to disk (always enabled)" control={<Toggle checked={true} onChange={() => {}} disabled label="Log to file" />} />
       </Card>
     </div>
   );
