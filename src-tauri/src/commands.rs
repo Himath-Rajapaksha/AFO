@@ -782,3 +782,69 @@ pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdow
 pub async fn get_system_disks() -> Result<Vec<disks::DiskInfo>, String> {
     Ok(disks::get_system_disks())
 }
+
+#[cfg(test)]
+mod import_tests {
+    use super::*;
+
+    #[test]
+    fn test_package_json_rejected() {
+        let result = tokio_test::block_on(import_rules(r#"{"name":"afo","version":"3.0.3"}"#.into()));
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Invalid rules JSON"), "Error was: {err}");
+    }
+
+    #[test]
+    fn test_empty_object_rejected() {
+        let result = tokio_test::block_on(import_rules("{}".into()));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_empty_array_accepted() {
+        let result = tokio_test::block_on(import_rules("[]".into()));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_missing_fields_rejected() {
+        let result = tokio_test::block_on(import_rules(r#"[{"name":"test"}]"#.into()));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_empty_name_rejected() {
+        let result = tokio_test::block_on(import_rules(r#"[{"id":"1","name":"","enabled":true,"conditions":[{"field":"Extension","operator":"Equals","value":".pdf"}],"actions":[{"Move":{"destination":"~/Docs"}}]}]"#.into()));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("cannot be empty"));
+    }
+
+    #[test]
+    fn test_no_conditions_rejected() {
+        let result = tokio_test::block_on(import_rules(r#"[{"id":"1","name":"Test","enabled":true,"conditions":[],"actions":[{"Move":{"destination":"~/Docs"}}]}]"#.into()));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("no conditions"));
+    }
+
+    #[test]
+    fn test_no_actions_rejected() {
+        let result = tokio_test::block_on(import_rules(r#"[{"id":"1","name":"Test","enabled":true,"conditions":[{"field":"Extension","operator":"Equals","value":".pdf"}],"actions":[]}]"#.into()));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("no actions"));
+    }
+
+    #[test]
+    fn test_random_text_rejected() {
+        let result = tokio_test::block_on(import_rules("hello world".into()));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_valid_rule_accepted() {
+        let result = tokio_test::block_on(import_rules(r#"[{"id":"1","name":"Good Rule","enabled":true,"conditions":[{"field":"Extension","operator":"Equals","value":".pdf"}],"actions":[{"Move":{"destination":"~/Docs"}}]}]"#.into()));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 1);
+    }
+}

@@ -200,7 +200,7 @@ pub fn search_history(
             "SELECT id, operation_type, source_path, dest_path, timestamp, reverted
              FROM operations {where_clause}
              ORDER BY timestamp DESC
-             LIMIT ?1 OFFSET ?2"
+             LIMIT ? OFFSET ?"
         );
 
         let mut stmt = db.prepare(&sql).map_err(|e| e.to_string())?;
@@ -438,4 +438,193 @@ pub fn redo_last() -> Result<Option<JournalEntry>, String> {
     }
 
     Ok(entry)
+}
+
+#[cfg(test)]
+mod search_tests {
+    use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    static TEST_DB: OnceLock<Mutex<Connection>> = OnceLock::new();
+
+    fn setup_test_db() {
+        TEST_DB.get_or_init(|| {
+            let conn = Connection::open_in_memory().unwrap();
+            conn.execute_batch(
+                "CREATE TABLE IF NOT EXISTS operations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    operation_type TEXT NOT NULL,
+                    source_path TEXT NOT NULL,
+                    dest_path TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    reverted INTEGER NOT NULL DEFAULT 0
+                );",
+            ).unwrap();
+            Mutex::new(conn)
+        });
+        // Clear table between tests
+        let db = TEST_DB.get().unwrap().lock().unwrap();
+        db.execute("DELETE FROM operations", []).unwrap();
+    }
+
+    fn insert_test_entry(op: &str, src: &str, dst: &str, ts: &str) {
+        let db = TEST_DB.get().unwrap().lock().unwrap();
+        db.execute(
+            "INSERT INTO operations (operation_type, source_path, dest_path, timestamp, reverted)
+             VALUES (?1, ?2, ?3, ?4, 0)",
+            params![op, src, dst, ts],
+        ).unwrap();
+    }
+
+    fn search_test(filter: &HistoryFilter, limit: i64, offset: i64) -> Result<Vec<JournalEntry>, String> {
+        let db = TEST_DB.get().unwrap().lock().unwrap();
+        let mut conditions: Vec<String> = Vec::new();
+        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+
+        if let Some(ref op) = filter.operation_type {
+            if !op.is_empty() && op != "all" {
+                conditions.push("operation_type = ?".into());
+                param_values.push(Box::new(op.clone()));
+            }
+        }
+        if let Some(ref q) = filter.query {
+            if !q.is_empty() {
+                let pattern = format!("%{q}%");
+                conditions.push("(source_path LIKE ? OR dest_path LIKE ?)".into());
+                param_values.push(Box::new(pattern.clone()));
+                param_values.push(Box::new(pattern));
+            }
+        }
+        if let Some(ref from) = filter.date_from {
+            if !from.is_empty() {
+                conditions.push("timestamp >= ?".into());
+                param_values.push(Box::new(from.clone()));
+            }
+        }
+        if let Some(ref to) = filter.date_to {
+            if !to.is_empty() {
+                conditions.push("timestamp <= ?".into());
+                param_values.push(Box::new(to.clone()));
+            }
+        }
+
+        let where_clause = if conditions.is_empty() {
+            String::new()
+        } else {
+            format!("WHERE {}", conditions.join(" AND "))
+        };
+
+        let sql = format!(
+            "SELECT id, operation_type, source_path, dest_path, timestamp, reverted
+             FROM operations {where_clause}
+             ORDER BY timestamp DESC
+             LIMIT ? OFFSET ?"
+        );
+
+        let mut stmt = db.prepare(&sql).map_err(|e| e.to_string())?;
+        let mut params: Vec<&dyn rusqlite::types::ToSql> = param_values
+            .iter()
+            .map(|p| p.as_ref() as &dyn rusqlite::types::ToSql)
+            .collect();
+        params.push(&limit);
+        params.push(&offset);
+
+        let rows = stmt
+            .query_map(params.as_slice(), |row| {
+                Ok(JournalEntry {
+                    id: row.get(0)?,
+                    operation_type: row.get(1)?,
+                    source_path: row.get(2)?,
+                    dest_path: row.get(3)?,
+                    timestamp: row.get(4)?,
+                    reverted: row.get::<_, i32>(5)? != 0,
+                })
+            })
+            .map_err(|e| e.to_string())?;
+        Ok(rows.filter_map(|r| r.ok()).collect())
+    }
+
+    #[test]
+    fn test_search_by_query_finds_filename_in_source() {
+        setup_test_db();
+        insert_test_entry("move", "/home/user/Downloads/photo.jpg", "/home/user/Images/photo.jpg", "2026-07-20T10:00:00Z");
+        insert_test_entry("move", "/home/user/Downloads/doc.pdf", "/home/user/Documents/doc.pdf", "2026-07-20T11:00:00Z");
+
+        let filter = HistoryFilter { query: Some("photo".into()), operation_type: None, date_from: None, date_to: None };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].source_path.contains("photo"));
+    }
+
+    #[test]
+    fn test_search_by_query_finds_filename_in_dest() {
+        setup_test_db();
+        insert_test_entry("move", "/tmp/a.txt", "/home/user/Documents/report.pdf", "2026-07-20T10:00:00Z");
+
+        let filter = HistoryFilter { query: Some("report".into()), operation_type: None, date_from: None, date_to: None };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].dest_path.contains("report"));
+    }
+
+    #[test]
+    fn test_search_by_operation_type() {
+        setup_test_db();
+        insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
+        insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
+        insert_test_entry("rename", "/tmp/e.txt", "/tmp/f.txt", "2026-07-20T12:00:00Z");
+
+        let filter = HistoryFilter { query: None, operation_type: Some("copy".into()), date_from: None, date_to: None };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].operation_type, "copy");
+    }
+
+    #[test]
+    fn test_search_by_date_range() {
+        setup_test_db();
+        insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-19T10:00:00Z");
+        insert_test_entry("move", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T10:00:00Z");
+        insert_test_entry("move", "/tmp/e.txt", "/tmp/f.txt", "2026-07-21T10:00:00Z");
+
+        let filter = HistoryFilter { query: None, operation_type: None, date_from: Some("2026-07-20T00:00:00Z".into()), date_to: Some("2026-07-20T23:59:59Z".into()) };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].timestamp.contains("2026-07-20"));
+    }
+
+    #[test]
+    fn test_search_combined_filters_use_and_logic() {
+        setup_test_db();
+        insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
+        insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
+        insert_test_entry("move", "/tmp/e.txt", "/tmp/f.txt", "2026-07-21T10:00:00Z");
+
+        let filter = HistoryFilter { query: None, operation_type: Some("move".into()), date_from: Some("2026-07-20T00:00:00Z".into()), date_to: Some("2026-07-20T23:59:59Z".into()) };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].operation_type, "move");
+        assert!(results[0].timestamp.contains("2026-07-20"));
+    }
+
+    #[test]
+    fn test_search_no_filters_returns_all() {
+        setup_test_db();
+        insert_test_entry("move", "/tmp/a.txt", "/tmp/b.txt", "2026-07-20T10:00:00Z");
+        insert_test_entry("copy", "/tmp/c.txt", "/tmp/d.txt", "2026-07-20T11:00:00Z");
+
+        let filter = HistoryFilter { query: None, operation_type: None, date_from: None, date_to: None };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert!(results.len() >= 2);
+    }
+
+    #[test]
+    fn test_search_query_is_case_insensitive_like() {
+        setup_test_db();
+        insert_test_entry("move", "/home/user/Downloads/PHOTO.jpg", "/tmp/b.txt", "2026-07-20T10:00:00Z");
+
+        let filter = HistoryFilter { query: Some("photo".into()), operation_type: None, date_from: None, date_to: None };
+        let results = search_test(&filter, 50, 0).unwrap();
+        assert_eq!(results.len(), 1);
+    }
 }

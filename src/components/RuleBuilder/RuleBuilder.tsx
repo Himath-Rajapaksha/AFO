@@ -1,10 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Trash2, FolderOpen, Sparkles, Download, Upload } from "lucide-react";
+import { Plus, Trash2, FolderOpen, Sparkles, Download, Upload, AlertTriangle } from "lucide-react";
 import { listRules, saveRules, exportRules, importRules, applyRules, type Rule, type RuleCondition, type RuleAction } from "../../lib/tauri-bridge";
 import { Card, CardHeader, CardDescription, CardRow } from "../ui/Card";
 import Button from "../ui/Button";
 import Toggle from "../ui/Toggle";
 import RuleFlowEditor from "./RuleFlowEditor";
+
+type ConflictAction = "replace" | "keep_both" | "skip";
+
+interface ConflictItem {
+  importedRule: Rule;
+  action: ConflictAction;
+}
 
 function emptyCondition(): RuleCondition { return { field: "Extension", operator: "Contains", value: "" }; }
 function emptyAction(): RuleAction { return { Move: { destination: "" } }; }
@@ -95,6 +102,9 @@ export default function RuleBuilder() {
   const [dryRunResult, setDryRunResult] = useState("");
   const [useVisualEditor, setUseVisualEditor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [conflicts, setConflicts] = useState<ConflictItem[] | null>(null);
+  const [pendingImport, setPendingImport] = useState<Rule[] | null>(null);
+  const [conflictApplyAll, setConflictApplyAll] = useState<ConflictAction | null>(null);
 
   const refresh = useCallback(async () => { try { setRules(await listRules()); } catch (e) { setError(String(e)); } }, []);
   useEffect(() => { refresh().finally(() => setLoading(false)); }, [refresh]);
@@ -149,22 +159,64 @@ export default function RuleBuilder() {
       const text = await file.text();
       const imported = await importRules(text);
       const existingNames = new Set(rules.map((r) => r.name));
-      const conflicts = imported.filter((r) => existingNames.has(r.name));
-      let merged: Rule[];
-      if (conflicts.length > 0) {
-        const withoutConflicts = imported.filter((r) => !existingNames.has(r.name));
-        const updatedExisting = rules.map((r) => {
-          const replacement = conflicts.find((c) => c.name === r.name);
-          return replacement ? { ...replacement, id: r.id } : r;
-        });
-        merged = [...updatedExisting, ...withoutConflicts];
+      const conflicting = imported.filter((r) => existingNames.has(r.name));
+
+      if (conflicting.length === 0) {
+        const merged = [...rules, ...imported];
+        await saveRules(merged);
+        setRules(merged);
       } else {
-        merged = [...rules, ...imported];
+        setPendingImport(imported);
+        setConflicts(conflicting.map((r) => ({ importedRule: r, action: "replace" as ConflictAction })));
+        setConflictApplyAll(null);
       }
-      await saveRules(merged);
-      setRules(merged);
     } catch (e) { setError(String(e)); }
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function setConflictAction(idx: number, action: ConflictAction) {
+    setConflicts((prev) => prev ? prev.map((c, i) => i === idx ? { ...c, action } : c) : null);
+  }
+
+  function applyConflictAll(action: ConflictAction) {
+    setConflictApplyAll(action);
+    setConflicts((prev) => prev ? prev.map((c) => ({ ...c, action })) : null);
+  }
+
+  async function confirmImport() {
+    if (!conflicts || !pendingImport) return;
+    const conflictMap = new Map(conflicts.map((c) => [c.importedRule.name, c.action]));
+    let merged: Rule[] = [...rules];
+
+    for (const imp of pendingImport) {
+      const existing = rules.find((r) => r.name === imp.name);
+      if (!existing) {
+        merged.push(imp);
+        continue;
+      }
+      const action = conflictMap.get(imp.name) ?? "replace";
+      if (action === "replace") {
+        merged = merged.map((r) => r.id === existing.id ? { ...imp, id: r.id } : r);
+      } else if (action === "keep_both") {
+        let newName = `${imp.name} (2)`;
+        let counter = 3;
+        while (merged.some((r) => r.name === newName)) { newName = `${imp.name} (${counter})`; counter++; }
+        merged.push({ ...imp, name: newName });
+      }
+      // "skip" → do nothing
+    }
+
+    await saveRules(merged);
+    setRules(merged);
+    setConflicts(null);
+    setPendingImport(null);
+    setConflictApplyAll(null);
+  }
+
+  function cancelImport() {
+    setConflicts(null);
+    setPendingImport(null);
+    setConflictApplyAll(null);
   }
 
   function addPreset(preset: PresetRule) {
@@ -191,6 +243,56 @@ export default function RuleBuilder() {
       </div>
 
       {error && <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "var(--accent-soft)", color: "var(--danger)" }}>{error}</div>}
+
+      {/* Import Conflict Dialog */}
+      {conflicts && (
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
+            <CardHeader>Import Conflicts</CardHeader>
+          </div>
+          <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
+            {conflicts.length} rule{conflicts.length > 1 ? "s" : ""} share a name with existing rules. Choose how to handle each:
+          </p>
+          <div className="flex gap-2 mb-4">
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("replace")} style={conflictApplyAll === "replace" ? { borderColor: "var(--accent)" } : {}}>Replace All</Button>
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("keep_both")} style={conflictApplyAll === "keep_both" ? { borderColor: "var(--accent)" } : {}}>Keep Both All</Button>
+            <Button variant="secondary" size="sm" onClick={() => applyConflictAll("skip")} style={conflictApplyAll === "skip" ? { borderColor: "var(--accent)" } : {}}>Skip All</Button>
+          </div>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {conflicts.map((c, idx) => (
+              <div key={c.importedRule.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: "var(--bg-inset)", border: "1px solid var(--border-default)" }}>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{c.importedRule.name}</div>
+                  <div className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                    {c.importedRule.conditions.length} condition{c.importedRule.conditions.length !== 1 ? "s" : ""}, {c.importedRule.actions.length} action{c.importedRule.actions.length !== 1 ? "s" : ""}
+                  </div>
+                </div>
+                <div className="flex gap-1 shrink-0 ml-3">
+                  {(["replace", "keep_both", "skip"] as ConflictAction[]).map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => setConflictAction(idx, a)}
+                      className="rounded-md px-2 py-1 text-[10px] font-medium transition-colors"
+                      style={{
+                        backgroundColor: c.action === a ? "var(--accent)" : "transparent",
+                        color: c.action === a ? "white" : "var(--text-secondary)",
+                        border: `1px solid ${c.action === a ? "var(--accent)" : "var(--border-default)"}`,
+                      }}
+                    >
+                      {a === "replace" ? "Replace" : a === "keep_both" ? "Keep Both" : "Skip"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button onClick={confirmImport}>Apply Choices</Button>
+            <Button variant="secondary" onClick={cancelImport}>Cancel Import</Button>
+          </div>
+        </Card>
+      )}
 
       {/* Rule Builder Settings */}
       <Card>
