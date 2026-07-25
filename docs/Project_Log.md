@@ -1596,3 +1596,56 @@ Two diverged bar implementations:
 
 ### Decision: Consolidate to StorageBar.tsx
 The inline bar had no advantage over the shared component. `StorageBar.tsx` already handles edge cases (zero total, label hiding, free space). Maintaining two bar implementations caused the drift that led to this bug. Consolidated to single source of truth.
+
+
+## 2026-07-25 — v3.1.0 Phase 4 i18n Locale Verification (Closing Report Reconciliation)
+
+### Summary
+Reconciled discrepancies in the Phase 4 i18n closing report. The report claimed 12 namespaces and 275 total keys in `en.json`, but source-of-truth verification revealed different actual counts.
+
+### Verification Commands Run
+```bash
+# Total key count (leaf paths in JSON)
+jq 'paths(scalars) | length' src/locales/en.json
+# Result: 465
+
+# Namespace count (top-level keys)
+jq 'keys | length' src/locales/en.json
+# Result: 17
+
+# Per-namespace breakdown
+jq -r 'to_entries[] | "\(.key): \(.value | paths(scalars) | length)"' src/locales/en.json | sort -t: -k2 -nr
+```
+
+### Actual vs Reported Counts
+| Metric | Reported | Actual | Delta |
+|--------|----------|--------|-------|
+| Namespaces | 12 | 17 | +5 |
+| Total keys | 275 | 465 | +190 |
+
+### Namespace Breakdown (actual)
+- `rules`: 84 keys
+- `settings`: 63 keys
+- `organize`: 45 keys
+- `capture`: 33 keys
+- `common`: 33 keys
+- `app`: 36 keys
+- `aria`: 31 keys
+- `tutorial`: 31 keys
+- `history`: 26 keys
+- `duplicates`: 27 keys
+- `commandPalette`: 14 keys
+- `storage`: 15 keys
+- `sidebar`: 11 keys
+- `preview`: 6 keys
+- `update`: 6 keys
+- `dropZone`: 2 keys
+- `toast`: 2 keys
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean (0 errors)
+- Phase 3 `aria` namespace confirmed present with 31 keys
+- UI verification of "no raw i18n keys visible" — **not performed** (requires running Tauri app)
+
+### Notes
+The Phase 4 batch (v3.1.0) should not be marked complete until the closing report reflects verified source-of-truth numbers from `en.json`. This entry records the actual verified counts for future reference.
