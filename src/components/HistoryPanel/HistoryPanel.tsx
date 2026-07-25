@@ -63,8 +63,26 @@ export default function HistoryPanel() {
   }, []);
 
   const refresh = useCallback(async (off = 0, append = false) => {
-    try { const batch = await getHistory(PAGE_SIZE, off); setEntries((p) => (append ? [...p, ...batch] : batch)); setHasMore(batch.length === PAGE_SIZE); }
-    catch (e) { setError(String(e)); }
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY_MS = 200;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const batch = await getHistory(PAGE_SIZE, off);
+        setEntries((p) => (append ? [...p, ...batch] : batch));
+        setHasMore(batch.length === PAGE_SIZE);
+        setError("");
+        setLoading(false);
+        return;
+      } catch (e) {
+        const msg = String(e);
+        if (msg.includes("Journal not initialized") && attempt < MAX_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+        setError(msg);
+        break;
+      }
+    }
     setLoading(false);
   }, []);
 
