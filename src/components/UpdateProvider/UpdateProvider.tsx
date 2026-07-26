@@ -10,25 +10,28 @@ interface UpdateInfo {
   body?: string;
 }
 
+const DISMISSED_KEY = "afo:update-dismissed-version";
+
 export default function UpdateProvider() {
   const { t } = useTranslation();
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem("afo:update-dismissed") === "true";
-  });
 
   const checkForUpdates = useCallback(async () => {
     try {
       const update = await check();
       if (update) {
-        setUpdateInfo({
-          version: update.version,
-          date: update.date,
-          body: update.body,
-        });
+        const dismissedVersion = localStorage.getItem(DISMISSED_KEY);
+        // Show toast unless user dismissed THIS exact version
+        if (dismissedVersion !== update.version) {
+          setUpdateInfo({
+            version: update.version,
+            date: update.date,
+            body: update.body,
+          });
+        }
       }
     } catch (e) {
       console.error("Update check failed:", e);
@@ -36,20 +39,22 @@ export default function UpdateProvider() {
     }
   }, []);
 
+  // Check on mount + every 60 minutes
   useEffect(() => {
     checkForUpdates();
     const interval = setInterval(checkForUpdates, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkForUpdates]);
 
+  // Escape key to dismiss
   useEffect(() => {
-    if (dismissed || !updateInfo) return;
+    if (!updateInfo) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") handleDismiss();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dismissed, updateInfo]);
+  }, [updateInfo]);
 
   async function handleDownload() {
     if (!updateInfo) return;
@@ -77,11 +82,14 @@ export default function UpdateProvider() {
   }
 
   function handleDismiss() {
-    setDismissed(true);
-    localStorage.setItem("afo:update-dismissed", "true");
+    // Only dismiss THIS version — next restart with a newer version will show again
+    if (updateInfo) {
+      localStorage.setItem(DISMISSED_KEY, updateInfo.version);
+    }
+    setUpdateInfo(null);
   }
 
-  if (dismissed || !updateInfo) return null;
+  if (!updateInfo) return null;
 
   return (
     <div
