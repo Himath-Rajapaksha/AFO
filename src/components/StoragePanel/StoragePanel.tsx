@@ -53,14 +53,14 @@ interface StorageCardProps {
   mountPoint: string;
   totalSpace: number;
   availableSpace: number;
-  isRemovable: boolean;
+  isSystemDrive: boolean;
   breakdown: StorageBreakdownResult | null;
   loading: boolean;
   onScan: (dir: string) => void;
   onRemove?: () => void;
 }
 
-function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSpace: propAvailableSpace, isRemovable, breakdown, loading, onScan, onRemove }: StorageCardProps) {
+function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSpace: propAvailableSpace, isSystemDrive, breakdown, loading, onScan, onRemove }: StorageCardProps) {
   const { t } = useTranslation();
   // Use breakdown's disk space if available (for custom dirs), otherwise use props
   const totalSpace = breakdown?.totalSpace || propTotalSpace;
@@ -78,10 +78,10 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
 
   return (
     <div className="flex gap-5 rounded-xl p-5" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
-      {/* Drive icon */}
+      {/* Drive/folder icon */}
       <div className="flex flex-col items-center gap-2 shrink-0">
         <img
-          src={isRemovable ? driveIcon : folderIcon}
+          src={isSystemDrive ? driveIcon : folderIcon}
           alt=""
           className="h-16 w-16 object-contain"
         />
@@ -90,7 +90,7 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             {formatCapacity(totalSpace)}
           </div>
           <div className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-            {isRemovable ? t("storage.external") : t("storage.storage")}
+            {isSystemDrive ? t("storage.storage") : t("storage.folder")}
           </div>
         </div>
       </div>
@@ -124,43 +124,49 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             </div>
           </>
         ) : (
-          <>
-            <div className="h-4 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-default)" }}>
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${usagePercent}%`,
-                  backgroundColor: "var(--accent)",
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                {formatBytes(usedSpace)} {t("storage.used")}
-              </span>
-              <Button
-                variant="secondary"
-                onClick={() => onScan(mountPoint)}
-                disabled={loading}
-                className="text-[10px] px-2 py-0.5 ml-auto"
-              >
-                {loading ? t("common.scanning") : t("common.scan")}
-              </Button>
-              {onRemove && (
-                <button
-                  onClick={onRemove}
-                  className="p-1 rounded transition-colors"
-                  style={{ color: "var(--text-tertiary)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
-                  title={t("storage.remove")}
-                >
-                  <Trash2 size={12} />
-                </button>
-              )}
-            </div>
-          </>
+          <div className="h-4 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-default)" }}>
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${usagePercent}%`,
+                backgroundColor: "var(--accent)",
+              }}
+            />
+          </div>
         )}
+
+        {/* Action row — always visible */}
+        <div className="flex items-center gap-2 mt-2">
+          {breakdown ? (
+            <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              {formatBytes(usedSpace)} {t("storage.used")}
+            </span>
+          ) : (
+            <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              {formatBytes(usedSpace)} {t("storage.used")}
+            </span>
+          )}
+          <Button
+            variant="secondary"
+            onClick={() => onScan(mountPoint)}
+            disabled={loading}
+            className="text-[10px] px-2 py-0.5 ml-auto"
+          >
+            {loading ? t("common.scanning") : t("common.scan")}
+          </Button>
+          {onRemove && (
+            <button
+              onClick={onRemove}
+              className="p-1 rounded transition-colors"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
+              title={t("storage.remove")}
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -314,7 +320,7 @@ export default function StoragePanel() {
               mountPoint={disk.mount_point}
               totalSpace={disk.total_space}
               availableSpace={disk.available_space}
-              isRemovable={disk.is_removable}
+              isSystemDrive={true}
               breakdown={breakdowns[disk.mount_point] || null}
               loading={loading[disk.mount_point] || false}
               onScan={handleScan}
@@ -336,7 +342,7 @@ export default function StoragePanel() {
               mountPoint={dir}
               totalSpace={0}
               availableSpace={0}
-              isRemovable={false}
+              isSystemDrive={false}
               breakdown={breakdowns[dir] || null}
               loading={loading[dir] || false}
               onScan={handleScan}

@@ -47,7 +47,7 @@
     "settings": "Settings",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "version": "AFO v3.3.2"
+    "version": "AFO v3.3.3"
   },
   "organize": {
     "title": "Organize Files",
@@ -223,6 +223,7 @@
     "systemDrives": "System Drives",
     "customDirectories": "Custom Directories",
     "external": "External",
+    "folder": "Folder",
     "storage": "Storage",
     "scanned": "scanned",
     "freeOf": "free of {{capacity}}",
