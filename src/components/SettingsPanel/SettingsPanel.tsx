@@ -254,7 +254,7 @@ function AboutSection() {
       <Card>
         <CardHeader>{t("settings.aboutAFO")}</CardHeader>
         <CardDescription>{t("settings.advancedFileOrganizer")}</CardDescription>
-        <CardRow label={t("settings.version")} rightValue="3.4.5" />
+        <CardRow label={t("settings.version")} rightValue="3.4.6" />
         <CardRow label={t("settings.build")} rightValue="2026-07-21" />
         <CardRow label={t("settings.engine")} rightValue="Tauri v2 + Rust" />
         <CardRow label={t("settings.license")} rightValue="MIT" />
