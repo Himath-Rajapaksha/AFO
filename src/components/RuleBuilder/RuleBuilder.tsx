@@ -385,6 +385,44 @@ export default function RuleBuilder() {
                     ))}
                     <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addCondition")}</button>
                   </div>
+                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.actions")}</label>
+                    {formActions.map((a, i) => (
+                      <div key={i} className="flex items-center gap-2 mb-2">
+                        <select
+                          value={a.Move ? "Move" : a.Copy ? "Copy" : "Rename"}
+                          onChange={(e) => {
+                            const type = e.target.value;
+                            setFormActions((prev) => prev.map((x, j) => j === i
+                              ? type === "Move" ? { Move: { destination: "" } }
+                                : type === "Copy" ? { Copy: { destination: "" } }
+                                : { Rename: { pattern: "" } }
+                              : x));
+                          }}
+                          aria-label={t("aria.actionType")}
+                          className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}
+                        >
+                          <option value="Move">{t("rules.actionMove")}</option>
+                          <option value="Copy">{t("rules.actionCopy")}</option>
+                          <option value="Rename">{t("rules.actionRename")}</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={a.Move?.destination ?? a.Copy?.destination ?? a.Rename?.pattern ?? ""}
+                          onChange={(e) => setFormActions((prev) => prev.map((x, j) => {
+                            if (j !== i) return x;
+                            if (x.Move) return { Move: { destination: e.target.value } };
+                            if (x.Copy) return { Copy: { destination: e.target.value } };
+                            return { Rename: { pattern: e.target.value } };
+                          }))}
+                          placeholder={a.Rename ? "e.g. {name}_{counter}{ext}" : "e.g. ~/Documents"}
+                          aria-label={t("aria.actionDestination")}
+                          className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle}
+                        />
+                        {formActions.length > 1 && <button onClick={() => setFormActions((prev) => prev.filter((_, j) => j !== i))} aria-label={t("aria.removeAction")} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                      </div>
+                    ))}
+                    <button onClick={() => setFormActions((prev) => [...prev, emptyAction()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addAction")}</button>
+                  </div>
                   <div className="flex gap-2"><Button onClick={handleSave}>{t("common.saveRule")}</Button><Button variant="secondary" onClick={cancel}>{t("common.cancel")}</Button></div>
                 </div>
               </Card>
@@ -423,6 +461,44 @@ export default function RuleBuilder() {
                       </div>
                     ))}
                     <button onClick={() => setFormConditions((prev) => [...prev, emptyCondition()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addCondition")}</button>
+                  </div>
+                  <div><label className="mb-2 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{t("rules.actions")}</label>
+                    {formActions.map((a, i) => (
+                      <div key={i} className="flex items-center gap-2 mb-2">
+                        <select
+                          value={a.Move ? "Move" : a.Copy ? "Copy" : "Rename"}
+                          onChange={(e) => {
+                            const type = e.target.value;
+                            setFormActions((prev) => prev.map((x, j) => j === i
+                              ? type === "Move" ? { Move: { destination: "" } }
+                                : type === "Copy" ? { Copy: { destination: "" } }
+                                : { Rename: { pattern: "" } }
+                              : x));
+                          }}
+                          aria-label={t("aria.actionType")}
+                          className={`rounded-lg px-2 py-1.5 text-sm ${inputCls}`} style={inputStyle}
+                        >
+                          <option value="Move">{t("rules.actionMove")}</option>
+                          <option value="Copy">{t("rules.actionCopy")}</option>
+                          <option value="Rename">{t("rules.actionRename")}</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={a.Move?.destination ?? a.Copy?.destination ?? a.Rename?.pattern ?? ""}
+                          onChange={(e) => setFormActions((prev) => prev.map((x, j) => {
+                            if (j !== i) return x;
+                            if (x.Move) return { Move: { destination: e.target.value } };
+                            if (x.Copy) return { Copy: { destination: e.target.value } };
+                            return { Rename: { pattern: e.target.value } };
+                          }))}
+                          placeholder={a.Rename ? "e.g. {name}_{counter}{ext}" : "e.g. ~/Documents"}
+                          aria-label={t("aria.actionDestination")}
+                          className={`min-w-0 flex-1 ${inputCls}`} style={inputStyle}
+                        />
+                        {formActions.length > 1 && <button onClick={() => setFormActions((prev) => prev.filter((_, j) => j !== i))} aria-label={t("aria.removeAction")} style={{ color: "var(--text-tertiary)" }}><Trash2 size={12} /></button>}
+                      </div>
+                    ))}
+                    <button onClick={() => setFormActions((prev) => [...prev, emptyAction()])} className="text-xs" style={{ color: "var(--accent)" }}>{t("rules.addAction")}</button>
                   </div>
                   <div className="flex gap-2"><Button onClick={handleSave}>{t("common.saveRule")}</Button><Button variant="secondary" onClick={cancel}>{t("common.cancel")}</Button></div>
                 </div>

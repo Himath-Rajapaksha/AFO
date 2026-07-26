@@ -47,7 +47,7 @@
     "settings": "Settings",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "version": "AFO v3.3.4"
+    "version": "AFO v3.3.5"
   },
   "organize": {
     "title": "Organize Files",
@@ -126,6 +126,11 @@
     "ruleName": "Rule Name",
     "conditions": "Conditions",
     "addCondition": "+ Add Condition",
+    "actions": "Actions",
+    "actionMove": "Move",
+    "actionCopy": "Copy",
+    "actionRename": "Rename",
+    "addAction": "+ Add Action",
     "conditionField": "Condition field",
     "conditionOperator": "Condition operator",
     "conditionValue": "Condition value",
@@ -440,6 +445,9 @@
     "conditionOperator": "Condition operator",
     "conditionValue": "Condition value",
     "removeCondition": "Remove condition",
+    "actionType": "Action type",
+    "actionDestination": "Action destination or pattern",
+    "removeAction": "Remove action",
     "maxScanDepth": "Max scan depth",
     "recursiveScan": "Recursive scan",
     "enableUndoRedo": "Enable undo/redo",
