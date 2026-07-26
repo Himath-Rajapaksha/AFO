@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
@@ -127,6 +127,72 @@ const nodeTypes: NodeTypes = {
   action: ActionNode,
 };
 
+// ── Build initial nodes/edges from rule ─────────────────
+
+function buildInitialNodesEdges(rule: Rule) {
+  const initialNodes: Node[] = [];
+  const initialEdges: Edge[] = [];
+  let nodeId = 1;
+
+  // Trigger node
+  const triggerId = `trigger-${nodeId++}`;
+  initialNodes.push({
+    id: triggerId,
+    type: "trigger",
+    position: { x: 250, y: 0 },
+    data: { label: rule.name || "New Rule" },
+  });
+
+  let lastId = triggerId;
+  let yOffset = 100;
+
+  // Condition nodes
+  const conditions = rule.conditions.length > 0 ? rule.conditions : [{ field: "Extension", operator: "Contains", value: "" }];
+  conditions.forEach((cond) => {
+    const condId = `condition-${nodeId++}`;
+    initialNodes.push({
+      id: condId,
+      type: "condition",
+      position: { x: 250, y: yOffset },
+      data: { field: cond.field, operator: cond.operator, value: cond.value, onUpdate: () => {} },
+    });
+    initialEdges.push({
+      id: `e-${lastId}-${condId}`,
+      source: lastId,
+      target: condId,
+      animated: true,
+      style: { stroke: "var(--info)" },
+    });
+    lastId = condId;
+    yOffset += 150;
+  });
+
+  // Action nodes
+  const actions = rule.actions.length > 0 ? rule.actions : [{ Move: { destination: "" } }];
+  actions.forEach((action) => {
+    const actionId = `action-${nodeId++}`;
+    const actionType = action.Move ? "Move" : action.Copy ? "Copy" : "Rename";
+    const value = action.Move?.destination || action.Copy?.destination || action.Rename?.pattern || "";
+    initialNodes.push({
+      id: actionId,
+      type: "action",
+      position: { x: 250, y: yOffset },
+      data: { actionType, value, onUpdate: () => {} },
+    });
+    initialEdges.push({
+      id: `e-${lastId}-${actionId}`,
+      source: lastId,
+      target: actionId,
+      animated: true,
+      style: { stroke: "var(--success)" },
+    });
+    lastId = actionId;
+    yOffset += 150;
+  });
+
+  return { initialNodes, initialEdges, nextNodeId: nodeId };
+}
+
 // ── Flow Editor ─────────────────────────────────────────
 
 interface RuleFlowEditorProps {
@@ -137,153 +203,39 @@ interface RuleFlowEditorProps {
 
 export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEditorProps) {
   const { t } = useTranslation();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const nodeIdRef = useRef(1);
+  const built = useMemo(() => buildInitialNodesEdges(rule), [rule.id]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(built.initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(built.initialEdges);
+  const nodeIdRef = useRef(built.nextNodeId);
 
-  // Initialize nodes from rule
-  useEffect(() => {
-    const initialNodes: Node[] = [];
-    const initialEdges: Edge[] = [];
-    let nodeId = 1;
-
-    // Trigger node
-    const triggerId = `trigger-${nodeId++}`;
-    initialNodes.push({
-      id: triggerId,
-      type: "trigger",
-      position: { x: 250, y: 0 },
-      data: { label: rule.name || "New Rule" },
+  // Wire up onUpdate callbacks to real setters
+  const wiredNodes = useMemo(() => {
+    return nodes.map((n) => {
+      if (n.type === "condition") {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            onUpdate: (field: string, operator: string, value: string) => {
+              setNodes((nds) => nds.map((nd) => nd.id === n.id ? { ...nd, data: { ...nd.data, field, operator, value } } : nd));
+            },
+          },
+        };
+      }
+      if (n.type === "action") {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            onUpdate: (type: string, val: string) => {
+              setNodes((nds) => nds.map((nd) => nd.id === n.id ? { ...nd, data: { ...nd.data, actionType: type, value: val } } : nd));
+            },
+          },
+        };
+      }
+      return n;
     });
-
-    // Condition nodes
-    let lastId = triggerId;
-    let yOffset = 100;
-
-    rule.conditions.forEach((cond) => {
-      const condId = `condition-${nodeId++}`;
-      initialNodes.push({
-        id: condId,
-        type: "condition",
-        position: { x: 250, y: yOffset },
-        data: {
-          field: cond.field,
-          operator: cond.operator,
-          value: cond.value,
-          onUpdate: (field: string, operator: string, value: string) => {
-            updateConditionNode(condId, field, operator, value);
-          },
-        },
-      });
-      initialEdges.push({
-        id: `e-${lastId}-${condId}`,
-        source: lastId,
-        target: condId,
-        animated: true,
-        style: { stroke: "var(--info)" },
-      });
-      lastId = condId;
-      yOffset += 150;
-    });
-
-    // Action nodes
-    rule.actions.forEach((action) => {
-      const actionId = `action-${nodeId++}`;
-      const actionType = action.Move ? "Move" : action.Copy ? "Copy" : "Rename";
-      const value = action.Move?.destination || action.Copy?.destination || action.Rename?.pattern || "";
-      initialNodes.push({
-        id: actionId,
-        type: "action",
-        position: { x: 250, y: yOffset },
-        data: {
-          actionType,
-          value,
-          onUpdate: (type: string, val: string) => {
-            updateActionNode(actionId, type, val);
-          },
-        },
-      });
-      initialEdges.push({
-        id: `e-${lastId}-${actionId}`,
-        source: lastId,
-        target: actionId,
-        animated: true,
-        style: { stroke: "var(--success)" },
-      });
-      lastId = actionId;
-      yOffset += 150;
-    });
-
-    // If no conditions/actions, add placeholders
-    if (rule.conditions.length === 0) {
-      const condId = `condition-${nodeId++}`;
-      initialNodes.push({
-        id: condId,
-        type: "condition",
-        position: { x: 250, y: yOffset },
-        data: {
-          field: "Extension",
-          operator: "Contains",
-          value: "",
-          onUpdate: (field: string, operator: string, value: string) => {
-            updateConditionNode(condId, field, operator, value);
-          },
-        },
-      });
-      initialEdges.push({
-        id: `e-${lastId}-${condId}`,
-        source: lastId,
-        target: condId,
-        animated: true,
-        style: { stroke: "var(--info)" },
-      });
-      lastId = condId;
-      yOffset += 150;
-    }
-
-    if (rule.actions.length === 0) {
-      const actionId = `action-${nodeId++}`;
-      initialNodes.push({
-        id: actionId,
-        type: "action",
-        position: { x: 250, y: yOffset },
-        data: {
-          actionType: "Move",
-          value: "",
-          onUpdate: (type: string, val: string) => {
-            updateActionNode(actionId, type, val);
-          },
-        },
-      });
-      initialEdges.push({
-        id: `e-${lastId}-${actionId}`,
-        source: lastId,
-        target: actionId,
-        animated: true,
-        style: { stroke: "var(--success)" },
-      });
-    }
-
-    nodeIdRef.current = nodeId;
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  });
-
-  function updateConditionNode(id: string, field: string, operator: string, value: string) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === id ? { ...n, data: { ...n.data, field, operator, value } } : n
-      )
-    );
-  }
-
-  function updateActionNode(id: string, actionType: string, value: string) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === id ? { ...n, data: { ...n.data, actionType, value } } : n
-      )
-    );
-  }
+  }, [nodes, setNodes]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
@@ -301,14 +253,7 @@ export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEdito
         id,
         type: "condition",
         position: { x: 250, y: newY },
-        data: {
-          field: "Extension",
-          operator: "Contains",
-          value: "",
-          onUpdate: (field: string, operator: string, value: string) => {
-            updateConditionNode(id, field, operator, value);
-          },
-        },
+        data: { field: "Extension", operator: "Contains", value: "", onUpdate: () => {} },
       },
     ]);
   };
@@ -324,13 +269,7 @@ export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEdito
         id,
         type: "action",
         position: { x: 250, y: newY },
-        data: {
-          actionType: "Move",
-          value: "",
-          onUpdate: (type: string, val: string) => {
-            updateActionNode(id, type, val);
-          },
-        },
+        data: { actionType: "Move", value: "", onUpdate: () => {} },
       },
     ]);
   };
@@ -393,7 +332,7 @@ export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEdito
       {/* Flow canvas */}
       <div className="flex-1">
         <ReactFlow
-          nodes={nodes}
+          nodes={wiredNodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}

@@ -32,7 +32,7 @@
 
       .progress-loader .bar {
         width: 1px;
-        height: 10px;
+        height: 100%;
         border-radius: 7px;
         background: #0071E3;
         animation: loading 2s cubic-bezier(0.4, 1.01, 1, 1) infinite;
@@ -47,7 +47,7 @@
   </head>
   <body>
     <div id="root">
-      <div class="app-loader">
+      <div class="app-loader" id="app-loader">
         <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="48" height="48" rx="10" fill="#0071E3"/>
           <path d="M24 12L16 24h6v12l8-12h-6V12z" fill="white"/>
@@ -55,6 +55,22 @@
         <div class="progress-loader"><div class="bar"></div></div>
       </div>
     </div>
+    <script>
+      // Hide loader after React mounts (minimum 800ms display)
+      window.__AFO_LOADER_START = Date.now();
+      window.__AFO_HIDE_LOADER = function() {
+        var elapsed = Date.now() - window.__AFO_LOADER_START;
+        var remaining = Math.max(0, 800 - elapsed);
+        setTimeout(function() {
+          var loader = document.getElementById('app-loader');
+          if (loader) {
+            loader.style.transition = 'opacity 0.3s ease';
+            loader.style.opacity = '0';
+            setTimeout(function() { loader.remove(); }, 300);
+          }
+        }, remaining);
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
