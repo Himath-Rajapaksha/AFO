@@ -49,7 +49,7 @@
         height: 100%;
         border-radius: 7px;
         background: #0071E3;
-        animation: loading 4.5s cubic-bezier(0.4, 0.1, 0.4, 1) infinite;
+        animation: loading 6.75s cubic-bezier(0.4, 0.1, 0.4, 1) infinite;
       }
 
       @keyframes loading {
@@ -75,7 +75,7 @@
       window.__AFO_LOADER_START = Date.now();
       window.__AFO_HIDE_LOADER = function() {
         var elapsed = Date.now() - window.__AFO_LOADER_START;
-        var remaining = Math.max(0, 2500 - elapsed);
+        var remaining = Math.max(0, 3750 - elapsed);
         setTimeout(function() {
           var loader = document.getElementById('app-loader');
           if (loader) {

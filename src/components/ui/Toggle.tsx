@@ -22,9 +22,9 @@ export function Toggle({ checked, onChange, label, disabled, size = 'md' }: Togg
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      style={{ background: 'none', border: 'none', padding: 0 }}
+      style={{ background: 'none', border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer' }}
     >
-      <label className={`afo-toggle ${size === 'sm' ? 'afo-toggle--sm' : ''}`} style={{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : undefined }}>
+      <div className={`afo-toggle ${size === 'sm' ? 'afo-toggle--sm' : ''}`} style={{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : undefined }}>
         <input
           type="checkbox"
           checked={checked}
@@ -42,7 +42,7 @@ export function Toggle({ checked, onChange, label, disabled, size = 'md' }: Togg
             </svg>
           </div>
         </div>
-      </label>
+      </div>
     </button>
   );
 }
