@@ -1649,3 +1649,110 @@ jq -r 'to_entries[] | "\(.key): \(.value | paths(scalars) | length)"' src/locale
 
 ### Notes
 The Phase 4 batch (v3.1.0) should not be marked complete until the closing report reflects verified source-of-truth numbers from `en.json`. This entry records the actual verified counts for future reference.
+
+
+## 2026-07-25 — v3.3.1-beta: Design System Regression Fixes + Release
+
+### Summary
+Fixed critical visual regressions introduced by the native design system integration (`530881b`): broken i18n namespace resolution, Toggle/Button/SegmentedControl reverted to CSS-based primitives, Toggle double-toggle bug, logo color mismatch, and CardHeader uppercase styling lost. Released as v3.3.1-beta.
+
+### Branch
+- `ft/v3.1.0-planning-pass` (merged to `master` after release)
+
+### i18n Namespace Fix
+- **Problem**: `i18n.ts` imported all locales under a single `translation` namespace, but components used per-key namespaces (`organize.title`, `settings.title`, etc.)
+- **Fix**: `i18n.ts` now registers each top-level key from `en.json` as its own namespace
+- **Additional fix**: `organize.title` key collided — renamed to `organize.trackTitle` in `en.json` + updated `OrganizePanel.tsx`
+
+### Toggle Restore + Double-Toggle Bug Fix
+- Replaced framer-motion Toggle with Galahhad CSS switch (original design system primitive)
+- **Bug found**: Original Toggle had `<button onClick={() => onChange(!checked)}>` wrapping `<label>` with `<input onChange={() => onChange(!checked)}>`. Clicking the label area fired BOTH events — input toggled once, button toggled again, net zero effect (React controlled component).
+- **Fix**: Made `<input>` `readOnly`, removed its `onChange`. Only button `onClick` fires now.
+
+### Button + Focus-Visible Restore
+- Replaced framer-motion Button with CSS-based `afo-btn` from original design system
+- Added `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` to `Button.css` for keyboard accessibility
+
+### SegmentedControl Restore
+- Replaced framer-motion SegmentedControl with CSS-based sliding indicator (original design system)
+- Preserved `layoutId` prop for existing call sites
+
+### Logo Investigation
+- Three logo versions exist in git history:
+  1. `0e24eb5` (original): 512x512, transparent background, pure black funnel (RGB 0,0,0)
+  2. `8863e8e` (blue AFO icon): 2048x2048, #F7F7F7 light gray bg, blue rounded square with white funnel
+  3. `530881b` (design system): Same file as `8863e8e`
+- **User wants**: Black background + white funnel (NOT the blue version, NOT the transparent version)
+- **Status**: New logo needs to be created — not resolved in this session
+
+### CardHeader Uppercase Investigation
+- **Original commit** (`1b6c757`): CardHeader was a plain `<h3>` with `text-sm font-semibold` — NO uppercase
+- **Design system commit** (`530881b`): CardHeader became `<div className="... uppercase tracking-wide text-[11.5px] ...">` — uppercase, small-caps
+- **User's "original" IS the `530881b` version**, not the truly original `1b6c757` version
+- **Status**: CardHeader needs uppercase styling re-applied to match `530881b` — not resolved in this session
+
+### Version
+- Bumped to 3.3.1-beta across: `package.json`, `Cargo.toml`, `tauri.conf.json`, Sidebar.tsx, SettingsPanel.tsx
+
+### Files Modified
+- `src/i18n.ts` — fixed namespace registration (each en.json top-level key = its own namespace)
+- `src/locales/en.json` — fixed organize.trackTitle collision, version bumped to 3.3.1-beta
+- `src/components/OrganizePanel/OrganizePanel.tsx` — updated trackTitle reference
+- `src/components/ui/Toggle.tsx` — restored Galahhad CSS switch, fixed double-toggle bug
+- `src/components/ui/Button.tsx` — restored CSS-based afo-btn
+- `src/components/ui/Button.css` — added focus-visible styles
+- `src/components/ui/SegmentedControl.tsx` — restored CSS-based sliding indicator
+- `src/components/SettingsPanel/SettingsPanel.tsx` — version 3.3.1-beta
+- `src/components/Sidebar/Sidebar.tsx` — version from en.json
+
+### Build Verification
+- `npx tsc --noEmit` — ✅ Clean
+- `cargo tauri build --bundles deb,rpm,nsis` — ✅ All three bundles built
+
+### Release
+- Tag: `v3.3.1-beta`
+- Artifacts:
+  - `AFO_3.3.1-beta_amd64.deb`
+  - `AFO-3.3.1-beta-1.x86_64.rpm`
+  - `AFO_3.3.1-beta_x64-setup.exe` (NSIS)
+- GitHub release: https://github.com/Himath-Rajapaksha/AFO/releases/tag/v3.3.1-beta
+
+### Outstanding Issues (carry to next session)
+1. **Logo**: Needs new image — black rounded square background + white funnel. Neither transparent+black nor blue+white matches what user wants.
+2. **CardHeader**: Must be uppercase, small-caps, tracking-wide. Need to re-apply the `530881b` styling to the current restored Card.tsx.
+3. **User to re-run full checklist** once both visual issues are actually resolved.
+
+
+## 2026-07-26 — Versioning Policy Update: MAJOR.FEATURE.DEBUG Format
+
+### Summary
+Updated the project's versioning scheme from standard semver (MAJOR.MINOR.PATCH) to a custom MAJOR.FEATURE.DEBUG format per user's specification. Updated all documentation files.
+
+### Version Format Change
+```
+MAJOR.FEATURE.DEBUG
+│     │       └── DEBUG    — Bug fixes, minor fixes, patches
+│     └──────── FEATURE  — New features, capabilities, UI additions
+└────────────── MAJOR    — Breaking changes, architecture rewrites
+```
+
+### Files Updated
+- `VERSIONING.md` — Full rewrite with new format, bump rules, examples, and release checklist
+- `docs/AGENTS.md` — Updated Current State and Rules sections to reference MAJOR.FEATURE.DEBUG
+- `CLAUDE.md` (root) — Added new Versioning section before Troubleshooting
+- `docs/CLAUDE.md` — Added new Versioning section before Debugging
+- `project_rules.md` — Updated Versioning section with format breakdown
+
+### Version Bump Rules
+| Change type | Bump | Example |
+|---|---|---|
+| New feature (backwards-compatible) | FEATURE | 3.1.0 → 3.2.0 |
+| Bug fix (no new features) | DEBUG | 3.2.0 → 3.2.1 |
+| Breaking change (config, OS, API) | MAJOR | 3.x → 4.0.0 |
+| Test/verification build | pre-release suffix | 3.2.0 → 3.2.0-beta.1 |
+
+### Build Verification
+- No code changes — documentation only
+
+### Commit
+- Pending: `docs: update versioning policy to MAJOR.FEATURE.DEBUG format`

@@ -104,6 +104,15 @@ Tech stack: Rust/Tauri backend, React 18 + TypeScript frontend, Tailwind CSS, Fr
 - **Styling**: Tailwind CSS utility-first approach. Custom styles in `src/index.css`.
 - **TypeScript**: Strict type checking enabled via `tsconfig.json`.
 
+## Versioning
+
+Follow `VERSIONING.md` — uses **MAJOR.FEATURE.DEBUG** format:
+- **MAJOR** — Breaking changes (config format, OS support, API)
+- **FEATURE** — New features (new panels, capabilities, UI additions)
+- **DEBUG** — Bug fixes and minor improvements
+
+Version number changes **once per actual release**, not per iteration. Test builds use pre-release suffixes: `3.2.0-beta.1`, `3.2.0-beta.2`, etc. Version strings must be consistent across: `package.json`, `Cargo.toml`, `tauri.conf.json`, `en.json`, `SettingsPanel.tsx`.
+
 ## Debugging
 
 - Frontend debugging: Use browser dev tools (accessible via Tauri devtools)

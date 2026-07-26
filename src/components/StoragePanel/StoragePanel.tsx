@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { listen } from "@tauri-apps/api/event";
 import { FolderOpen, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { showToast } from "../Toast";
@@ -13,6 +14,7 @@ import driveIcon from "../../assets/drive-icon.png";
 interface CategoryBreakdown {
   label: string;
   bytes: number;
+  count: number;
 }
 
 interface StorageBreakdownResult {
@@ -112,11 +114,11 @@ function StorageCard({ name, mountPoint, totalSpace: propTotalSpace, availableSp
             <StorageBar segments={segments} totalBytes={breakdown.totalScannedBytes} />
             {/* Legend */}
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-              {segments.map((s) => (
-                <div key={s.label} className="flex items-center gap-1.5 text-[11px]">
-                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: s.color }} />
-                  <span style={{ color: "var(--text-primary)" }}>{s.label}</span>
-                  <span style={{ color: "var(--text-tertiary)" }}>{formatBytes(s.bytes)}</span>
+              {breakdown.categories.filter((c) => c.bytes > 0).map((c) => (
+                <div key={c.label} className="flex items-center gap-1.5 text-[11px]">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: CATEGORY_COLORS[c.label] ?? "#aeaeb2" }} />
+                  <span style={{ color: "var(--text-primary)" }}>{c.label}</span>
+                  <span style={{ color: "var(--text-tertiary)" }}>{formatBytes(c.bytes)} ({c.count})</span>
                 </div>
               ))}
             </div>
@@ -240,6 +242,14 @@ export default function StoragePanel() {
 
   async function handleScan(dir: string) {
     setLoading((prev) => ({ ...prev, [dir]: true }));
+
+    // Listen for streaming progress updates during scan
+    const unlisten = await listen<StorageBreakdownResult>("afo://storage_progress", (event) => {
+      if (event.payload.directory === dir) {
+        setBreakdowns((prev) => ({ ...prev, [dir]: event.payload }));
+      }
+    });
+
     try {
       const data = await invoke<StorageBreakdownResult>("scan_storage_breakdown", {
         directory: dir,
@@ -248,6 +258,7 @@ export default function StoragePanel() {
     } catch (e) {
       showToast(t("app.scanFailed", { error: e }), "error");
     } finally {
+      unlisten();
       setLoading((prev) => ({ ...prev, [dir]: false }));
     }
   }

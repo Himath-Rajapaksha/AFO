@@ -201,6 +201,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | TypeScript config                       | `tsconfig.json`                                            |
 | Vite config                             | `vite.config.ts`                                           |
 
+## Versioning
+
+Follow `VERSIONING.md` — uses **MAJOR.FEATURE.DEBUG** format:
+- **MAJOR** — Breaking changes (config format, OS support, API)
+- **FEATURE** — New features (new panels, capabilities, UI additions)
+- **DEBUG** — Bug fixes and minor improvements
+
+Version number changes **once per actual release**, not per iteration. Test builds use pre-release suffixes: `3.2.0-beta.1`, `3.2.0-beta.2`, etc. Version strings must be consistent across: `package.json`, `Cargo.toml`, `tauri.conf.json`, `en.json`, `SettingsPanel.tsx`.
+
 ## Troubleshooting
 
 - **Tauri dev fails to start**: Ensure Node.js ≥20 and Rust stable toolchain are installed. Run `rustup update` and `npm install`.

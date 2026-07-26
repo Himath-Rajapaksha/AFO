@@ -648,13 +648,14 @@ pub async fn get_dir_stats_cmd(dir: String) -> Result<capture::DirStats, String>
 
 // ── Storage Breakdown ───────────────────────────────────────────────
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct CategoryBreakdown {
     pub label: String,
     pub bytes: u64,
+    pub count: u64,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageBreakdownResult {
     pub directory: String,
@@ -664,47 +665,121 @@ pub struct StorageBreakdownResult {
     pub available_space: u64,
 }
 
+// ── Mtime-based scan cache ──────────────────────────────────────────
+use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
+use std::time::SystemTime;
+
+struct CacheEntry {
+    dir_mtime: SystemTime,
+    result: StorageBreakdownResult,
+}
+
+static SCAN_CACHE: LazyLock<Mutex<HashMap<String, CacheEntry>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
 #[tauri::command]
-pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdownResult, String> {
+pub async fn scan_storage_breakdown(
+    app: tauri::AppHandle,
+    directory: String,
+) -> Result<StorageBreakdownResult, String> {
     use crate::core::organizer::CategoryConfig;
 
     if !std::path::Path::new(&directory).is_dir() {
         return Err(format!("{} is not a directory", directory));
     }
 
+    // Check mtime-based cache: if directory mtime unchanged since last scan, return cached
+    let dir_path = std::path::PathBuf::from(&directory);
+    let current_mtime = dir_path
+        .metadata()
+        .and_then(|m| m.modified())
+        .ok();
+
+    if let Some(mtime) = current_mtime {
+        let cache = SCAN_CACHE.lock().map_err(|e| e.to_string())?;
+        if let Some(entry) = cache.get(&directory) {
+            if entry.dir_mtime == mtime {
+                tracing::debug!(directory = %directory, "scan_storage_breakdown: cache hit");
+                return Ok(entry.result.clone());
+            }
+        }
+    }
+
     let config = CategoryConfig::load();
     let dir_clone = directory.clone();
+    let app_clone = app.clone();
+
+    // Channel for streaming progress from the blocking walk to the async emit task
+    let (progress_tx, mut progress_rx) = tokio::sync::mpsc::unbounded_channel::<StorageBreakdownResult>();
+
+    // Spawn a task to forward progress events to the frontend
+    let progress_task = tokio::spawn(async move {
+        while let Some(partial) = progress_rx.recv().await {
+            let _ = app_clone.emit("afo://storage_progress", partial);
+        }
+    });
 
     // Collect results in a blocking task to avoid freezing the UI
     let result = tokio::task::spawn_blocking(move || {
-        let mut category_sizes: std::collections::HashMap<String, u64> =
-            std::collections::HashMap::new();
+        let walk_start = std::time::Instant::now();
+        let mut category_sizes: std::collections::HashMap<String, (u64, u64)> =
+            std::collections::HashMap::new(); // label -> (bytes, count)
         let mut total_bytes: u64 = 0;
+        let mut file_count: u64 = 0;
+        let mut dir_count: u64 = 0;
+        let mut errors: u64 = 0;
+
+        // Streaming progress: emit partial results every 200ms
+        let mut last_emit = std::time::Instant::now();
+        let emit_interval = std::time::Duration::from_millis(200);
 
         fn walk_dir(
             path: &std::path::Path,
             config: &CategoryConfig,
-            category_sizes: &mut std::collections::HashMap<String, u64>,
+            category_sizes: &mut std::collections::HashMap<String, (u64, u64)>,
             total_bytes: &mut u64,
+            file_count: &mut u64,
+            dir_count: &mut u64,
+            errors: &mut u64,
         ) {
             let entries = match std::fs::read_dir(path) {
                 Ok(e) => e,
-                Err(_) => return, // skip permission-denied dirs
+                Err(_) => {
+                    *errors += 1;
+                    return;
+                }
             };
 
             for entry in entries {
                 let entry = match entry {
                     Ok(e) => e,
-                    Err(_) => continue,
+                    Err(_) => {
+                        *errors += 1;
+                        continue;
+                    }
                 };
                 let metadata = match entry.metadata() {
                     Ok(m) => m,
-                    Err(_) => continue,
+                    Err(_) => {
+                        *errors += 1;
+                        continue;
+                    }
                 };
 
                 if metadata.is_dir() {
-                    walk_dir(&entry.path(), config, category_sizes, total_bytes);
+                    *dir_count += 1;
+                    walk_dir(
+                        &entry.path(),
+                        config,
+                        category_sizes,
+                        total_bytes,
+                        file_count,
+                        dir_count,
+                        errors,
+                    );
                 } else if metadata.is_file() {
+                    *file_count += 1;
                     let size = metadata.len();
                     *total_bytes += size;
 
@@ -715,7 +790,6 @@ pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdow
                         .unwrap_or_default();
 
                     let category = config.categorize(&ext);
-                    // Capitalize first letter for display
                     let label = match category {
                         "images" => "Images",
                         "documents" => "Documents",
@@ -725,27 +799,113 @@ pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdow
                         "code" => "Code",
                         _ => "Other",
                     };
-                    *category_sizes
+                    let entry = category_sizes
                         .entry(label.to_string())
-                        .or_insert(0) += size;
+                        .or_insert((0, 0));
+                    entry.0 += size;
+                    entry.1 += 1;
                 }
             }
         }
 
-        walk_dir(
-            std::path::Path::new(&dir_clone),
-            &config,
-            &mut category_sizes,
-            &mut total_bytes,
-        );
+        // Walk top-level entries and emit progress after each subdir
+        let root_entries = match std::fs::read_dir(&dir_clone) {
+            Ok(e) => e,
+            Err(_) => {
+                return StorageBreakdownResult {
+                    directory: dir_clone,
+                    total_scanned_bytes: 0,
+                    categories: vec![],
+                    total_space: 0,
+                    available_space: 0,
+                };
+            }
+        };
+
+        for entry in root_entries.flatten() {
+            let metadata = match entry.metadata() {
+                Ok(m) => m,
+                Err(_) => {
+                    errors += 1;
+                    continue;
+                }
+            };
+
+            if metadata.is_dir() {
+                dir_count += 1;
+                walk_dir(
+                    &entry.path(),
+                    &config,
+                    &mut category_sizes,
+                    &mut total_bytes,
+                    &mut file_count,
+                    &mut dir_count,
+                    &mut errors,
+                );
+            } else if metadata.is_file() {
+                file_count += 1;
+                let size = metadata.len();
+                total_bytes += size;
+
+                let ext = entry
+                    .path()
+                    .extension()
+                    .map(|e| e.to_string_lossy().to_string())
+                    .unwrap_or_default();
+
+                let category = config.categorize(&ext);
+                let label = match category {
+                    "images" => "Images",
+                    "documents" => "Documents",
+                    "audio" => "Audio",
+                    "video" => "Video",
+                    "archives" => "Archives",
+                    "code" => "Code",
+                    _ => "Other",
+                };
+                let e = category_sizes
+                    .entry(label.to_string())
+                    .or_insert((0, 0));
+                e.0 += size;
+                e.1 += 1;
+            }
+
+            // Emit progress every 200ms
+            if last_emit.elapsed() >= emit_interval {
+                last_emit = std::time::Instant::now();
+                let mut cats: Vec<CategoryBreakdown> = category_sizes
+                    .iter()
+                    .map(|(label, &(bytes, count))| CategoryBreakdown {
+                        label: label.clone(),
+                        bytes,
+                        count,
+                    })
+                    .collect();
+                cats.sort_by(|a, b| b.bytes.cmp(&a.bytes));
+                let _ = progress_tx.send(StorageBreakdownResult {
+                    directory: dir_clone.clone(),
+                    total_scanned_bytes: total_bytes,
+                    categories: cats,
+                    total_space: 0,
+                    available_space: 0,
+                });
+            }
+        }
+
+        let walk_elapsed = walk_start.elapsed();
 
         // Build sorted categories (largest first)
         let mut categories: Vec<CategoryBreakdown> = category_sizes
             .into_iter()
-            .map(|(label, bytes)| CategoryBreakdown { label, bytes })
+            .map(|(label, (bytes, count))| CategoryBreakdown {
+                label,
+                bytes,
+                count,
+            })
             .collect();
         categories.sort_by(|a, b| b.bytes.cmp(&a.bytes));
 
+        let disk_start = std::time::Instant::now();
         // Get disk space for the directory's mount point
         let (total_space, available_space) = {
             use sysinfo::Disks;
@@ -763,6 +923,19 @@ pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdow
             }
             best_match.unwrap_or((0, 0))
         };
+        let disk_elapsed = disk_start.elapsed();
+
+        tracing::info!(
+            directory = %dir_clone,
+            files = file_count,
+            dirs = dir_count,
+            errors = errors,
+            walk_ms = walk_elapsed.as_millis(),
+            disk_ms = disk_elapsed.as_millis(),
+            total_ms = (walk_elapsed + disk_elapsed).as_millis(),
+            total_bytes = total_bytes,
+            "scan_storage_breakdown complete"
+        );
 
         StorageBreakdownResult {
             directory: dir_clone,
@@ -774,6 +947,22 @@ pub async fn scan_storage_breakdown(directory: String) -> Result<StorageBreakdow
     })
     .await
     .map_err(|e| e.to_string())?;
+
+    // Wait for progress task to finish (channel closes when blocking task completes)
+    let _ = progress_task.await;
+
+    // Update cache
+    if let Some(mtime) = current_mtime {
+        if let Ok(mut cache) = SCAN_CACHE.lock() {
+            cache.insert(
+                directory,
+                CacheEntry {
+                    dir_mtime: mtime,
+                    result: result.clone(),
+                },
+            );
+        }
+    }
 
     Ok(result)
 }
