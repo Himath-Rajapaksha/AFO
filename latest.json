@@ -6,6 +6,10 @@
     "linux-x86_64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSeDdlSnJBZW8wd29UeExxdkpYZFE3SVQ1aVpvSG5yYzhuZHZpRVljY0lBU1dFU2lqKytsb3pHY09xK0V4VmovUmg0Mzdtd0tOWUJpcWdRYWtpYTJXOUs4M0JzNUQ5S1E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MDcwNzYzCWZpbGU6QUZPXzMuNC42X2FtZDY0LmRlYgpoUHhwRytWMm5JSlNScmhYWUtLdnQ1b2k5RUIxemJ0U3dhN083U01BZGFIQlJiM3d6QUY2c0hsK0pLYklWVXRRVlFHZ1VpdnRoQ0RhRklqNXNJeFJDQT09Cg==",
       "url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.6/AFO_3.4.6_amd64.deb"
+    },
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSeDdlSnJBZW8wd3FYZUlPcEtHek1IZEg2TFFqWisyZm5qL0grN1B5ZUFUSlhRSjByRU1DSExPenI3SUx6Nm9MbWIvWkJYcjgyZkhDSzRGTDB5dGRKdEZ6cEQ3cjM0TFE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MDcxNjgxCWZpbGU6QUZPXzMuNC42X3g2NC1zZXR1cC5leGUKQUd5RHpzSXozbTNBbGExRlUzZ2c2WDI5N1ZSWFV6ME82YzBFbUxTNlRkUkNQczBQZEc3cXVQM01yTG5pNVZJYW9MR1RvK25LT1N0MXRFYnpZRUVRQmc9PQo=",
+      "url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.6/AFO_3.4.6_x64-setup.exe"
     }
   }
 }
