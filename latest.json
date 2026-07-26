@@ -1,27 +1,11 @@
 {
-  "last_version": "3.4.5",
-  "last_version_name": "v3.4.5",
-  "update_files": [
-    {
-      "os": "windows",
-      "type": "exe",
-      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO_3.4.5_x64-setup.exe",
-      "download_sha256": "68f2e262561f86e7c4db05f95c279900c5b607f177d609afbc61ace238e813db",
-      "size": 12960489
-    },
-    {
-      "os": "linux",
-      "type": "deb",
-      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO_3.4.5_amd64.deb",
-      "download_sha256": "c292ecf91417bfe3223083e8cebce7c58491755cd9ee6a15fd6bc21572fd54c8",
-      "size": 10860494
-    },
-    {
-      "os": "linux",
-      "type": "rpm",
-      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO-3.4.5-1.x86_64.rpm",
-      "download_sha256": "afb148d569d93c9f84d9380278ff97a383d5a67582d65224cc29c5c549a46063",
-      "size": 10860590
+  "version": "3.4.5",
+  "notes": "Loading animation speed adjusted (4.5s CSS + 2500ms minimum display). DEB and RPM packages available.",
+  "pub_date": "2026-07-26T11:47:00Z",
+  "platforms": {
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSeDdlSnJBZW8wd3RVeFZEc0M5V0dRYmlSUFhwTHdRaWxaM3FoK3U0OTJQc0xqa04rV2RrTFNDbUUwdGp6VFllZG9VMHZmQ3JrejFmdmNDWXBUNy9GRjd5ME5LZHhjY0FrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MDY2Mjc5CWZpbGU6QUZPXzMuNC41X2FtZDY0LmRlYgpEc1JEQk5STWc0c1lXV0VXREJVU0VJa3kxN3pOaE1McEtkbGRrWURUK0dmOGlKa2doY3lxWHJvRWRrQmdwdlk1ZWhwbVNUSnkrYkUxZnZxUVZvU3hEZz09Cg==",
+      "url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO_3.4.5_amd64.deb"
     }
-  ]
+  }
 }
