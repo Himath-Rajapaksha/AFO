@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
@@ -142,7 +142,7 @@ export default function RuleFlowEditor({ rule, onSave, onCancel }: RuleFlowEdito
   const nodeIdRef = useRef(1);
 
   // Initialize nodes from rule
-  useState(() => {
+  useEffect(() => {
     const initialNodes: Node[] = [];
     const initialEdges: Edge[] = [];
     let nodeId = 1;
