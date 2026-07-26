@@ -42,7 +42,7 @@ Key rules:
 ## Gotchas
 
 - **Tauri v2 `open()` with `directory: true`**: Requires `dialog:open` capability. If the picker doesn't appear, check `src-tauri/capabilities/default.json`.
-- **CSP (Content Security Policy)**: `style-src` allows `'unsafe-inline'` for Tailwind. Scripts are restricted to self. Don't add `'unsafe-eval'`.
+- **CSP (Content Security Policy)**: `style-src` allows `'unsafe-inline'` for Tailwind. Scripts are restricted to self. Don't add `'unsafe-eval'`. `connect-src` must include `https://github.com` and `https://objects.githubusercontent.com` for the auto-updater to work.
 - **CategoryConfig::categorize()**: Iterates all categories × extensions per call. Not a bottleneck at <100k files, but don't call it in tight loops unnecessarily.
 - **`tokio::spawn` in Tauri setup**: Panics before the Tokio reactor is ready. Use `tauri::async_runtime::spawn` or defer to `ready()` event.
 - **Linux .deb dependencies**: Tauri apps need `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev` for building, and `libsoup3-2.4`, `libappindicator3-1`, `gstreamer1.0`, `libepoxy0`, `libxkbcommon0`, `libwayland-client0` at runtime.
@@ -73,12 +73,16 @@ These are the design system. Don't replace them with framer-motion or third-part
 # Source signing env vars from keyring
 source .afo-keys/build-env.sh
 
-# Build DEB + RPM
+# Build DEB + RPM (Linux)
 cargo tauri build --bundles deb,rpm
+
+# Build NSIS (Windows, cross-compile from Linux)
+cargo tauri build --target x86_64-pc-windows-gnu --bundles nsis
 
 # Sign artifacts (requires TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
 cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/release/bundle/deb/AFO_X.Y.Z_amd64.deb
 cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm
+cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/AFO_X.Y.Z_x64-setup.exe
 ```
 
 ### Publishing a Release
@@ -91,6 +95,8 @@ cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/release/bundle
      src-tauri/target/release/bundle/deb/AFO_X.Y.Z_amd64.deb.sig \
      src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm \
      src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm.sig \
+     src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/AFO_X.Y.Z_x64-setup.exe \
+     src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/AFO_X.Y.Z_x64-setup.exe.sig \
      latest.json --clobber
    ```
 3. Publish: `gh release edit vX.Y.Z --draft=false`

@@ -6,7 +6,7 @@
 
 ## Current State
 
-Production app with active feature development. Current version: `3.4.5`. See `CHANGELOG.md` for full version history and `VERSIONING.md` for versioning policy (MAJOR.FEATURE.DEBUG format).
+Production app with active feature development. Current version: `3.4.6`. See `CHANGELOG.md` for full version history and `VERSIONING.md` for versioning policy (MAJOR.FEATURE.DEBUG format).
 
 ## Tech Stack
 

@@ -81,7 +81,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `frontendDist`: `../dist` (relative to Tauri target directory).
 - **Application**:
   - Window size: 1200×800, resizable, decorated.
-  - Content Security Policy (CSP) restricts scripts/styles to self, allows inline styles (Tailwig), Google Fonts, and Tauri IPC.
+  - Content Security Policy (CSP) restricts scripts/styles to self, allows inline styles (Tailwind), Google Fonts, Tauri IPC, and GitHub for auto-updates.
 - **Bundling**:
   - Icons, NSIS/WiX/DMG settings for installers.
 
@@ -228,6 +228,15 @@ Version number changes **once per actual release**, not per iteration. Test buil
    - Linux: `.deb` and `.AppImage`
    - macOS: `.dmg`
    - Windows: `.exe` (NSIS) and `.msi` (WiX)
+3. Cross-compile Windows from Linux:
+   ```bash
+   cargo tauri build --target x86_64-pc-windows-gnu --bundles nsis
+   ```
+   Output: `src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/`
+
+## Release Process
+
+See `project_rules.md` for full release process including signing, artifact upload, and `latest.json` updates.
 
 ## Debugging
 

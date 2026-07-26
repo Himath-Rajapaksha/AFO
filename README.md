@@ -65,13 +65,13 @@ go your way.
 
 ```bash
 # Linux (.deb)
-sudo dpkg -i afo_3.0.3_amd64.deb
+sudo dpkg -i afo_3.4.6_amd64.deb
 
 # Linux (.rpm)
-sudo rpm -i afo-3.0.3.x86_64.rpm
+sudo rpm -i afo-3.4.6-1.x86_64.rpm
 
 # Windows
-# Download AFO-3.0.3-setup.exe from Releases and run it
+# Download AFO_3.4.6_x64-setup.exe from Releases and run it
 ```
 
 Open AFO → point it at a folder → hit **Scan** → review the preview → **Execute**.
@@ -84,7 +84,7 @@ Or just turn on **Real-Time Watching** and forget it exists.
 | Platform | Format | Status |
 |---|---|---|
 | Linux | `.deb` / `.rpm` | Available |
-| Windows | `.exe` | Available (installer via NSIS coming soon) |
+| Windows | `.exe` (NSIS) | Available |
 | macOS | `.dmg` | Configured, not yet built — contributions welcome |
 
 <br/>
@@ -92,11 +92,11 @@ Or just turn on **Real-Time Watching** and forget it exists.
 ## Roadmap
 
 - [ ] Cloud sync — Dropbox, Google Drive, OneDrive
-- [ ] Auto-updates
-- [ ] Rule import/export
-- [ ] History search & filtering
+- [x] Auto-updates
+- [x] Rule import/export
+- [x] History search & filtering
 - [ ] Full a11y pass (ARIA, keyboard nav)
-- [ ] Localization
+- [x] Localization
 
 Vote on priorities → [open an issue](https://github.com/Himath-Rajapaksha/AFO/issues)
 
