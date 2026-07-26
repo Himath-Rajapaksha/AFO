@@ -42,7 +42,6 @@ export default function HistoryPanel() {
     const stored = localStorage.getItem(STORAGE_KEY_ENABLE_UNDO);
     return stored !== null ? stored === "true" : true;
   });
-  const [keepFullHistory] = useState(true);
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -127,7 +126,6 @@ export default function HistoryPanel() {
       <Card>
         <CardHeader>{t("historySettings")}</CardHeader>
         <CardRow label={t("enableUndoRedo")} description={t("enableUndoRedoDesc")} control={<Toggle checked={enableUndoRedo} onChange={setEnableUndoRedo} label={t("enableUndoRedoLabel")} />} />
-        <CardRow label={t("keepFullHistory")} description={t("keepFullHistoryDesc")} control={<Toggle checked={keepFullHistory} onChange={() => {}} disabled label={t("keepFullHistoryLabel")} />} />
       </Card>
 
       {/* Search & Filters */}

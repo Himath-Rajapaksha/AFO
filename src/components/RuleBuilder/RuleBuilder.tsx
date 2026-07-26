@@ -312,7 +312,6 @@ export default function RuleBuilder() {
         <CardHeader>{t("rules.ruleBuilderSettings")}</CardHeader>
         <CardDescription>{t("rules.ruleBuilderSettingsDesc")}</CardDescription>
         <CardRow label={t("rules.visualRuleEditor")} description={t("rules.visualRuleEditorDesc")} control={<Toggle checked={useVisualEditor} onChange={setUseVisualEditor} />} />
-        <CardRow label={t("rules.livePreview")} description={t("rules.livePreviewDesc")} control={<Toggle checked={true} onChange={() => {}} disabled />} />
       </Card>
 
       {/* Preset Rules */}

@@ -230,8 +230,8 @@ function PrivacySection() {
       <Card>
         <CardHeader>{t("settings.privacyTitle")}</CardHeader>
         <CardDescription>{t("settings.privacyDesc")}</CardDescription>
-        <CardRow label={t("settings.usageAnalytics")} description={t("settings.usageAnalyticsDesc")} control={<Toggle checked={false} onChange={() => {}} disabled label={t("aria.usageAnalytics")} />} />
-        <CardRow label={t("settings.logToFile")} description={t("settings.logToFileDesc")} control={<Toggle checked={true} onChange={() => {}} disabled label={t("aria.logToFile")} />} />
+        <CardRow label={t("settings.usageAnalytics")} description={t("settings.usageAnalyticsDesc")} rightValue={t("common.comingSoon")} />
+        <CardRow label={t("settings.logToFile")} description={t("settings.logToFileDesc")} rightValue={t("common.enabled")} />
       </Card>
     </div>
   );

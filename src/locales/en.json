@@ -32,7 +32,9 @@
     "toggle": "toggle",
     "esc": "esc",
     "show": "Show",
-    "run": "Run"
+    "run": "Run",
+    "comingSoon": "Coming soon",
+    "enabled": "Enabled"
   },
   "sidebar": {
     "organize": "Organize",
