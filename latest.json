@@ -1,0 +1,27 @@
+{
+  "last_version": "3.4.5",
+  "last_version_name": "v3.4.5",
+  "update_files": [
+    {
+      "os": "windows",
+      "type": "exe",
+      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO_3.4.5_x64-setup.exe",
+      "download_sha256": "68f2e262561f86e7c4db05f95c279900c5b607f177d609afbc61ace238e813db",
+      "size": 12960489
+    },
+    {
+      "os": "linux",
+      "type": "deb",
+      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO_3.4.5_amd64.deb",
+      "download_sha256": "c292ecf91417bfe3223083e8cebce7c58491755cd9ee6a15fd6bc21572fd54c8",
+      "size": 10860494
+    },
+    {
+      "os": "linux",
+      "type": "rpm",
+      "download_url": "https://github.com/Himath-Rajapaksha/AFO/releases/download/v3.4.5/AFO-3.4.5-1.x86_64.rpm",
+      "download_sha256": "afb148d569d93c9f84d9380278ff97a383d5a67582d65224cc29c5c549a46063",
+      "size": 10860590
+    }
+  ]
+}
