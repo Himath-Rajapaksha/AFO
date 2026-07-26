@@ -56,6 +56,11 @@
   outline: 1px transparent;
 }
 
+.afo-btn:focus-visible {
+  outline: 2px solid var(--accent, #0071E3);
+  outline-offset: 2px;
+}
+
 .afo-btn:before {
   display: none;
 }

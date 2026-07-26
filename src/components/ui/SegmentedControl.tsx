@@ -1,9 +1,12 @@
+import { useRef, useState, useEffect, useCallback } from 'react';
+import './SegmentedControl.css';
+
 interface SegmentedControlProps<T extends string> {
   options: { value: T; label: string }[] | string[];
   value: T;
   onChange: (value: T) => void;
+  size?: 'sm' | 'md';
   layoutId?: string;
-  size?: string;
 }
 
 function normalizeOptions<T extends string>(
@@ -19,29 +22,74 @@ export function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
+  size = 'sm',
 }: SegmentedControlProps<T>) {
   const opts = normalizeOptions<T>(options);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const btnRefs = useRef<(HTMLLabelElement | null)[]>([]);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  const measure = useCallback(() => {
+    const activeIdx = Math.max(0, opts.findIndex((o) => o.value === value));
+    const btn = btnRefs.current[activeIdx];
+    if (!btn) return;
+
+    const wrap = wrapRef.current?.querySelector('.di-radio-island') as HTMLElement | null;
+    if (!wrap) return;
+
+    const islandRect = wrap.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    setIndicator({
+      left: btnRect.left - islandRect.left,
+      width: btnRect.width,
+    });
+  }, [opts, value]);
+
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
+
+  const groupName = opts.map((o) => o.value.toLowerCase().replace(/[^a-z0-9]+/g, '-')).join('-');
+
   return (
-    <div className="inline-flex gap-0.5 rounded-pill border border-border bg-bg p-0.5">
-      {opts.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <button
+    <div
+      ref={wrapRef}
+      className={`di-radio-wrap ${size === 'sm' ? 'di-radio-wrap--sm' : ''}`}
+    >
+      {opts.map((opt, i) => (
+        <input
+          key={opt.value}
+          type="radio"
+          name={groupName}
+          id={`di-${groupName}-${i}`}
+          className="di-radio-input"
+          checked={opt.value === value}
+          onChange={() => onChange(opt.value)}
+        />
+      ))}
+
+      <div className="di-radio-island">
+        {opts.map((opt, i) => (
+          <label
             key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            aria-pressed={active}
-            className={[
-              'rounded-[6px] px-4 py-[7px] text-[12.5px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none',
-              active
-                ? 'bg-card text-text shadow-card font-semibold'
-                : 'text-text-dim hover:text-text',
-            ].join(' ')}
+            ref={(el) => { btnRefs.current[i] = el; }}
+            className="di-radio-btn"
+            htmlFor={`di-${groupName}-${i}`}
+            aria-pressed={opt.value === value}
           >
             {opt.label}
-          </button>
-        );
-      })}
+          </label>
+        ))}
+        <div
+          className="di-radio-indicator"
+          style={{
+            transform: `translateX(${indicator.left - 3}px)`,
+            width: indicator.width,
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -1,77 +1,122 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+/* ── Card ────────────────────────────────────────────────────────────── */
+
+interface CardProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function Card({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`mb-5 rounded-card border border-border bg-card shadow-card ${className}`}
+      className={`rounded-card border p-5 ${className}`}
+      style={{
+        backgroundColor: "var(--bg-card)",
+        borderColor: "var(--border-default)",
+        boxShadow: "var(--shadow-sm)",
+      }}
     >
       {children}
     </div>
   );
 }
 
-export function CardHeader({ children }: { children: ReactNode }) {
+/* ── CardHeader ──────────────────────────────────────────────────────── */
+
+interface CardHeaderProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function CardHeader({ children, className = "" }: CardHeaderProps) {
   return (
-    <div className="border-b border-border px-[18px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-text-dim">
+    <h3
+      className={`mb-1 text-sm font-semibold ${className}`}
+      style={{ color: "var(--text-primary)" }}
+    >
       {children}
-    </div>
+    </h3>
   );
 }
 
-export function CardDescription({ children }: { children: ReactNode }) {
+/* ── CardDescription ─────────────────────────────────────────────────── */
+
+interface CardDescriptionProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function CardDescription({ children, className = "" }: CardDescriptionProps) {
   return (
-    <div className="px-[18px] pb-3 text-[12.5px] text-text-dim">
+    <p className={`mb-4 text-xs ${className}`} style={{ color: "var(--text-secondary)" }}>
       {children}
-    </div>
+    </p>
   );
 }
 
-export function CardRow({
-  children,
-  className = '',
-  label,
-  description,
-  control,
-  rightValue,
-}: {
+/* ── CardRow ─────────────────────────────────────────────────────────── */
+
+interface CardRowProps {
   children?: ReactNode;
   className?: string;
   label?: string;
   description?: string;
   control?: ReactNode;
   rightValue?: string;
-}) {
+}
+
+export function CardRow({ children, className = "", label, description, control, rightValue }: CardRowProps) {
   // If label/control props are used, render the structured layout
   if (label || control || rightValue) {
     return (
       <div
-        className={`flex items-center justify-between border-t border-border px-[18px] py-3.5 first:border-t-0 ${className}`}
+        className={`flex items-center justify-between gap-4 py-3 ${className}`}
+        style={{ borderBottom: "1px solid var(--border-default)" }}
       >
         <div className="min-w-0 flex-1">
-          <div className="text-[13.5px] font-medium text-text">{label}</div>
+          <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            {label}
+          </div>
           {description && (
-            <div className="text-[12px] text-text-dim">{description}</div>
+            <div className="mt-0.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+              {description}
+            </div>
           )}
         </div>
-        {control ?? (rightValue && (
-          <span className="text-[12.5px] text-text-dim">{rightValue}</span>
-        ))}
+        {control && <div className="shrink-0">{control}</div>}
+        {rightValue && !control && (
+          <div className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+            {rightValue}
+          </div>
+        )}
       </div>
     );
   }
   // Legacy: children-based layout
   return (
     <div
-      className={`flex items-center justify-between border-t border-border px-[18px] py-3.5 first:border-t-0 ${className}`}
+      className={`flex items-center justify-between gap-4 py-3 ${className}`}
+      style={{ borderBottom: "1px solid var(--border-default)" }}
     >
       {children}
     </div>
   );
 }
 
-export function CardFooter({ children }: { children: ReactNode }) {
+/* ── CardFooter ──────────────────────────────────────────────────────── */
+
+interface CardFooterProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function CardFooter({ children, className = "" }: CardFooterProps) {
   return (
-    <div className="flex justify-end gap-2.5 border-t border-border px-[18px] py-4">
+    <div
+      className={`mt-4 flex items-center gap-3 ${className}`}
+      style={{ borderTop: "1px solid var(--border-default)", paddingTop: 12 }}
+    >
       {children}
     </div>
   );

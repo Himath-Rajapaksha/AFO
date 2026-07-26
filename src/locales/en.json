@@ -45,7 +45,7 @@
     "settings": "Settings",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "version": "AFO v3.1.1"
+    "version": "AFO v3.3.1-beta"
   },
   "organize": {
     "title": "Organize Files",
@@ -90,7 +90,7 @@
     "exposure": "Exposure",
     "artist": "Artist",
     "album": "Album",
-    "title": "Title",
+    "trackTitle": "Title",
     "genre": "Genre",
     "noMetadata": "No metadata available.",
     "viewMetadataFor": "View metadata for {{name}}"

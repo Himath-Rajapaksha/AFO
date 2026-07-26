@@ -266,7 +266,7 @@ export default function OrganizePanel() {
               <div className="grid grid-cols-2 gap-1.5 text-xs">
                 {metadata.audio.artist && <CardRow label={t('organize.artist')} rightValue={metadata.audio.artist} />}
                 {metadata.audio.album && <CardRow label={t('organize.album')} rightValue={metadata.audio.album} />}
-                {metadata.audio.title && <CardRow label={t('organize.title')} rightValue={metadata.audio.title} />}
+                {metadata.audio.title && <CardRow label={t('organize.trackTitle')} rightValue={metadata.audio.title} />}
                 {metadata.audio.genre && <CardRow label={t('organize.genre')} rightValue={metadata.audio.genre} />}
               </div>
             </div>
