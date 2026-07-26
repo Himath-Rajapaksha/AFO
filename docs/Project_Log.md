@@ -1717,10 +1717,14 @@ Fixed critical visual regressions introduced by the native design system integra
   - `AFO_3.3.1-beta_x64-setup.exe` (NSIS)
 - GitHub release: https://github.com/Himath-Rajapaksha/AFO/releases/tag/v3.3.1-beta
 
-### Outstanding Issues (carry to next session)
-1. **Logo**: Needs new image — black rounded square background + white funnel. Neither transparent+black nor blue+white matches what user wants.
-2. **CardHeader**: Must be uppercase, small-caps, tracking-wide. Need to re-apply the `530881b` styling to the current restored Card.tsx.
-3. **User to re-run full checklist** once both visual issues are actually resolved.
+### Outstanding Issues
+1. ~~**Logo**~~ — Removed per user request (2026-07-26).
+2. ~~**CardHeader uppercase**~~ — Removed per user request (2026-07-26).
+3. **Cross-platform testing**: Linux (Ubuntu/Fedora), Windows 10+, macOS 12+ — requires actual hardware/VMs.
+4. **Performance profiling**: Profile batch operations on 10k+ files (storage scan optimization done, general organizer/rule engine profiling pending).
+5. **Desktop icon caching**: After v3.0.0 DEB install, GNOME still shows old orange icon. Needs `gtk-update-icon-cache` or icon theme rebuild.
+6. **`.icns` / `.ico` files**: Not yet regenerated from new PNG for macOS/Windows.
+7. **Storage scan release build**: Optimizations (mtime cache, streaming progress, file counts) committed but not yet built into a release artifact.
 
 
 ## 2026-07-26 — Versioning Policy Update: MAJOR.FEATURE.DEBUG Format
