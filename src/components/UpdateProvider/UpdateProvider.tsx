@@ -32,6 +32,7 @@ export default function UpdateProvider() {
       }
     } catch (e) {
       console.error("Update check failed:", e);
+      setError(String(e));
     }
   }, []);
 
