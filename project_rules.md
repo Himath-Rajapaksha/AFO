@@ -58,3 +58,46 @@ Custom primitives in `src/components/ui/`:
 - `StorageBar.tsx` — Segmented bar for storage breakdown display
 
 These are the design system. Don't replace them with framer-motion or third-party equivalents.
+
+## Release Process
+
+### Signing Keys
+
+- **Location**: `.afo-keys/private.key` (encrypted minisign key), `.afo-keys/private.key.pub` (public key)
+- **Password**: Stored in GNOME Keyring under label `AFO Release Signing Key`
+- **Never commit** the private key password or expose it in logs
+
+### Building & Signing Artifacts
+
+```bash
+# Source signing env vars from keyring
+source .afo-keys/build-env.sh
+
+# Build DEB + RPM
+cargo tauri build --bundles deb,rpm
+
+# Sign artifacts (requires TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/release/bundle/deb/AFO_X.Y.Z_amd64.deb
+cargo tauri signer sign -f .afo-keys/private.key src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm
+```
+
+### Publishing a Release
+
+1. Create a draft release: `gh release create vX.Y.Z --draft --notes "..."`
+2. Upload artifacts with signatures:
+   ```bash
+   gh release upload vX.Y.Z \
+     src-tauri/target/release/bundle/deb/AFO_X.Y.Z_amd64.deb \
+     src-tauri/target/release/bundle/deb/AFO_X.Y.Z_amd64.deb.sig \
+     src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm \
+     src-tauri/target/release/bundle/rpm/AFO-X.Y.Z-1.x86_64.rpm.sig \
+     latest.json --clobber
+   ```
+3. Publish: `gh release edit vX.Y.Z --draft=false`
+
+### Auto-Update Manifest (`latest.json`)
+
+- Repo root `latest.json` must match the release artifacts
+- Contains SHA256 hashes, file sizes, and download URLs
+- Tauri updater fetches from `https://github.com/Himath-Rajapaksha/AFO/releases/latest/download/latest.json`
+- Public key in `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`
