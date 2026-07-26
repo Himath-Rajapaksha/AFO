@@ -203,14 +203,14 @@ pub fn evaluate(file_path: &str, rule: &Rule) -> bool {
         .unwrap_or_default();
     let extension = path
         .extension()
-        .map(|e| e.to_string_lossy().to_string())
+        .map(|e| format!(".{}", e.to_string_lossy()))
         .unwrap_or_default();
 
     // ── Issue #3 fix: Lazy EXIF/audio extraction ───────────────────────────
     // Only extract metadata when the rule actually uses those fields AND the
     // file extension is a candidate. This avoids opening 8k+ non-image files
     // just to discover they have no EXIF data.
-    let ext_lower = extension.to_lowercase();
+    let ext_lower = extension.trim_start_matches('.').to_lowercase();
     let needs_exif_meta = needs_exif(rule) && is_image_extension(&ext_lower);
     let needs_audio_meta = needs_audio(rule) && is_audio_extension(&ext_lower);
 
@@ -338,7 +338,10 @@ pub fn evaluate(file_path: &str, rule: &Rule) -> bool {
                 }
             }
             _ => match cond.operator {
-                Operator::Equals => field_value == cond.value,
+                Operator::Equals => {
+                    // Support comma-separated values (e.g., ".jpg,.png,.gif")
+                    cond.value.split(',').any(|v| field_value == v.trim())
+                }
                 Operator::Contains => field_value.contains(&cond.value),
                 Operator::StartsWith => field_value.starts_with(&cond.value),
                 Operator::EndsWith => field_value.ends_with(&cond.value),
@@ -498,4 +501,102 @@ fn apply_rules_recursive<'a>(
     }
 
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_image_rule_dry_run() {
+        // Create test directory with fake image files
+        let test_dir = std::env::temp_dir().join("afo_rule_test");
+        let _ = fs::create_dir_all(&test_dir);
+        fs::write(test_dir.join("photo.jpg"), "fake").unwrap();
+        fs::write(test_dir.join("screenshot.png"), "fake").unwrap();
+        fs::write(test_dir.join("document.pdf"), "fake").unwrap();
+
+        // Override rules for test
+        let rule_json = serde_json::json!([{
+            "id": "test-rule",
+            "name": "Test Images",
+            "enabled": true,
+            "conditions": [{
+                "field": "Extension",
+                "operator": "Equals",
+                "value": ".jpg,.png"
+            }],
+            "actions": [{
+                "Move": {
+                    "destination": "/tmp/afo_dry_test_dest"
+                }
+            }]
+        }]);
+        let rules_path = dirs::config_dir().unwrap().join("afo").join("rules.json");
+        let original_rules = fs::read_to_string(&rules_path).unwrap_or_default();
+        fs::write(&rules_path, rule_json.to_string()).unwrap();
+
+        // Run dry-run
+        let result = apply_rules(test_dir.to_str().unwrap(), true).unwrap();
+
+        // Restore original rules
+        let _ = fs::write(&rules_path, original_rules);
+
+        // Should match 2 image files, skip 1 PDF
+        assert_eq!(result.total_files, 3, "should scan 3 files");
+        assert_eq!(result.moved, 2, "should match 2 image files");
+        assert_eq!(result.skipped, 1, "should skip 1 PDF");
+
+        // Cleanup
+        let _ = fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_image_rule_execute() {
+        // Create test directory and destination
+        let test_dir = std::env::temp_dir().join("afo_rule_test_exec");
+        let dest_dir = std::env::temp_dir().join("afo_rule_test_dest");
+        let _ = fs::create_dir_all(&test_dir);
+        let _ = fs::create_dir_all(&dest_dir);
+        let _ = fs::write(test_dir.join("photo.jpg"), "fake image");
+        let _ = fs::write(test_dir.join("photo.png"), "fake image");
+
+        // Temporarily override the rule destination to our test dest
+        let rule_json = serde_json::json!([{
+            "id": "test-rule",
+            "name": "Test Images",
+            "enabled": true,
+            "conditions": [{
+                "field": "Extension",
+                "operator": "Equals",
+                "value": ".jpg,.png"
+            }],
+            "actions": [{
+                "Move": {
+                    "destination": dest_dir.to_str().unwrap()
+                }
+            }]
+        }]);
+        let rules_path = dirs::config_dir().unwrap().join("afo").join("rules.json");
+        let original_rules = fs::read_to_string(&rules_path).unwrap_or_default();
+        fs::write(&rules_path, rule_json.to_string()).unwrap();
+
+        // Execute
+        let result = apply_rules(test_dir.to_str().unwrap(), false).unwrap();
+
+        // Verify files moved
+        assert_eq!(result.moved, 2, "should move 2 image files");
+        assert!(dest_dir.join("photo.jpg").exists(), "photo.jpg should be in dest");
+        assert!(dest_dir.join("photo.png").exists(), "photo.png should be in dest");
+        assert!(!test_dir.join("photo.jpg").exists(), "photo.jpg should not remain in source");
+        assert!(!test_dir.join("photo.png").exists(), "photo.png should not remain in source");
+
+        // Restore original rules
+        let _ = fs::write(&rules_path, original_rules);
+
+        // Cleanup
+        let _ = fs::remove_dir_all(&test_dir);
+        let _ = fs::remove_dir_all(&dest_dir);
+    }
 }
